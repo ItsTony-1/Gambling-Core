@@ -2,6 +2,10 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
 
@@ -9,16 +13,26 @@ public class Main {
 
     static String deckID;
     static int remainingCards;
+    static ArrayList <String> dealerHand = new ArrayList<>();
+    static ArrayList <String> playersHandsBlackJack = new ArrayList<>();
 
     public static void main(String[] args) {
 
-        String newData = createNewDeck();
 
-        dataReader(newData);
+        Scanner deckHandler = new Scanner(createNewDeck());
+        String data = deckHandler.useDelimiter("\\A").next();
+        data = stringCleaner(data);
+
+        System.out.println(data);
+
+        dataReader(data,true);
+
+        System.out.println(deckID);
+        System.out.println(remainingCards);
 
     }
 
-    static String createNewDeck() {
+    static InputStream createNewDeck() {
 
 
         URLConnection deckURl = null;
@@ -26,51 +40,62 @@ public class Main {
             deckURl = new URL("https://deckofcardsapi.com/api/"
                     + "deck/new/shuffle/?deck_count=6").openConnection();
 
-            return deckURl.getInputStream().toString();
+            return deckURl.getInputStream();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    static void dataReader(String data){
+    static InputStream drawNewCard(){
 
-        int searchRow = 0;
+        URLConnection deckURl = null;
+        try {
+            deckURl = new URL("https://deckofcardsapi.com/api/deck/" + deckID
+                    + "/draw/?count=2").openConnection();
 
-        StringBuilder dataWriter = new StringBuilder();
+            return deckURl.getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-        for (int charLocation = 0; charLocation < data.length(); charLocation++){
+    static void dataReader(String data, String playerDrawing){
+        Pattern pattern = Pattern.compile("(\\w+?):(\\w+?),");
+        Matcher matcher = pattern.matcher(data);
 
-            char localChar = data.charAt(charLocation);
+        while (matcher.find()) {
+            switch (matcher.group(1)){
+                case "deck_id": deckID = matcher.group(2);
+                case "remaining": remainingCards = Integer.parseInt(matcher.group(2));
+                case "code":
+                    if (playerDrawing.equals("User")){
 
-            switch(searchRow){
-                case 1:
-                    dataWriter.append(localChar);
-                    deckID = String.valueOf(dataWriter);
-                    break;
-                case 2:
-                    try {
-                        if (Integer.parseInt(String.valueOf(localChar)) > -1) {
-                            dataWriter.append(localChar);
-                            try {
-                                remainingCards = Integer.parseInt(String.valueOf(dataWriter));
-                            } catch (NumberFormatException e) {
-                                System.out.println("WE OVERESTIMATED OUR CODING ABILITIES");
-                                throw new NumberFormatException();
-                            }
-                        }
-                    }catch (NumberFormatException e){
-                        break;
                     }
-                    break;
-                default:
-                    break;
-            }
-            if(localChar == ','){
-                dataWriter = new StringBuilder();
-                searchRow++;
             }
 
         }
 
     }
+
+    static String stringCleaner(String toBeCleaned){
+
+        StringBuilder cleaned = new StringBuilder();
+
+        for (int charLocation = 0; charLocation < toBeCleaned.length(); charLocation++) {
+
+            char localChar = toBeCleaned.charAt(charLocation);
+
+            if (localChar == '{' || localChar == ' ' || localChar == '"' || localChar == '}'
+                || localChar == '[' || localChar == ']'){
+                continue;
+            }
+
+            cleaned.append(localChar);
+
+
+        }
+
+        return String.valueOf(cleaned);
+    }
+
 }
