@@ -1,7 +1,6 @@
 package org.example.games;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import org.example.Card;
 import org.example.Deck;
 
@@ -61,18 +60,31 @@ public class Game {
         Scanner deckHandler = new Scanner(getNewCard());
         String data = deckHandler.useDelimiter("\\A").next();
 
-        newCard = gson.fromJson(data, Card.class);
+        JsonElement rootnode = JsonParser.parseString(data);
+
+        JsonObject deckDetails = rootnode.getAsJsonObject();
+        JsonArray cardDetails = deckDetails.getAsJsonArray("cards");
+
+        String cardValues = String.valueOf(cardDetails);
+        cardValues = removeBrackets(cardValues);
+
+        newCard = gson.fromJson(cardValues, Card.class);
 
         return newCard;
     }
 
-    static void addCardToPlayerHand(Card card, int playerID){
 
-        switch (playerID){
-            case 1 -> userHand.add(card);
-            case 2 -> dealerHand.add(card);
+    private static String removeBrackets(String string){
+        StringBuilder returningString = new StringBuilder();
+        for (int i = 0; i < string.length(); i++) {
+
+            char letter = string.charAt(i);
+
+            if(letter == '[' || letter == ']'){
+                continue;
+            }
+
+            returningString.append(letter);
         }
-
-    }
-
+        return String.valueOf(returningString);}
 }

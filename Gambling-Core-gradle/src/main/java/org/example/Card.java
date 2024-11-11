@@ -18,9 +18,8 @@ public class Card {
     public String value;
     public String suit;
 
-    public Card() throws MalformedURLException {
-        downloadCardPNG(image);
-    }
+    public Card() {}
+
 
     /**
      *

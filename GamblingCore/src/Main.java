@@ -25,7 +25,7 @@ public class Main {
 
         System.out.println(data);
 
-        dataReader(data,true);
+        dataReader(data,);
 
         System.out.println(deckID);
         System.out.println(remainingCards);
