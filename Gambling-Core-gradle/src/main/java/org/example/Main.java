@@ -65,10 +65,9 @@ public class Main {
 
         while(playing){
 
-            if (blackJack.userHand.isEmpty()){
-                blackJack.startPlaying(true);
-                blackJack.startPlaying(false);
-            }
+
+            blackJack.startPlaying(true);
+            blackJack.startPlaying(false);
 
             blackJack.getUserInput();
 
@@ -84,7 +83,13 @@ public class Main {
                     playing = false;
                 } else if (blackJack.money <= 0) {
                     playing = false;
+                } else if (userInput.equals("yes")) {
+                    break;
                 }
+            }
+
+            if (Double.parseDouble(blackJack.deck.remaining) < Math.round(Double.parseDouble(blackJack.deck.remaining) * 0.60)){
+                blackJack.shuffleDeck();
             }
         }
         if (blackJack.money > 2500){
@@ -92,8 +97,11 @@ public class Main {
                     (blackJack.money - 2500));
         } else if (blackJack.money < 2500) {
             System.out.println("You left with $" + blackJack.money + ". Thats a loss of $" +
-                    (2500 -blackJack.money));
+                    (2500 - blackJack.money));
         }
+
+
+
     }
 
 

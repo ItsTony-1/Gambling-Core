@@ -86,5 +86,23 @@ public class Game {
 
             returningString.append(letter);
         }
-        return String.valueOf(returningString);}
+        return String.valueOf(returningString);
+    }
+
+    public static void shuffleDeck(){
+        URLConnection deckURl;
+        try {
+            deckURl = new URL("https://deckofcardsapi.com/api/deck/" + deck.deck_id
+                    + "/shuffle/").openConnection();
+
+            Gson gson = dataWriter.create();
+
+            Scanner deckHandler = new Scanner(deckURl.getInputStream());
+            String data = deckHandler.useDelimiter("\\A").next();
+
+            deck = gson.fromJson(data, Deck.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
