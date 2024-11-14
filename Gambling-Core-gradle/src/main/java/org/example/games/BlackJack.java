@@ -16,8 +16,11 @@ public class BlackJack extends Game{
     static Scanner console = new Scanner(System.in);
 
     public static ArrayList<Card> userHand = new ArrayList<>();
+    public static ArrayList<Card> userSplitHand = new ArrayList<>();
     static int userHandTotal = 0;
+    static int userSplitHandTotal = 0;
     static boolean userHasAce = false;
+    static boolean splitHand = false;
 
     public static ArrayList <Card> dealerHand = new ArrayList<>();
     static int dealerHandTotal = 0;
@@ -29,8 +32,9 @@ public class BlackJack extends Game{
     }
 
     /**
-     * draws 2 cards and gives them to either the player or the dealer
-     * @param toPlayer weather or not it goes to the player or dealer
+     * Draws 2 cards and gives them to either the player or the dealer
+     * <p> Calls: {@link Game#drawCards()} {@link BlackJack#parseCard(Card)}
+     * @param toPlayer whether it goes to the player or dealer
      */
     public static void startPlaying(boolean toPlayer){
 
@@ -42,25 +46,17 @@ public class BlackJack extends Game{
             userHand.add(drawnCard2);
 
             for (Card card : userHand) {
-                try {
-                    int cardValue = Integer.parseInt(card.value);
-                    if (cardValue == 1) {
-                        cardValue += 10;
-                        userHasAce = true;
-                    }
-                    userHandTotal += cardValue;
-                    if (userHasAce && userHandTotal > 21) {
-                        userHandTotal -= 10;
-                    }
-                } catch (NumberFormatException ex) {
-                    switch (card.value) {
-                        case "ACE" -> {
-                            userHandTotal += 1;
-                            userHasAce = true;
-                        }
-                        case "JACK", "QUEEN", "KING" -> userHandTotal += 10;
-                        default -> System.out.println("ERROR DATA FAILED 1");
-                    }
+
+                int tempValue = parseCard(card);
+
+                if (tempValue == 1){
+                    tempValue += 10;
+                    userHasAce = true;
+                }
+                userHandTotal += tempValue;
+                if (userHasAce && userHandTotal > 21) {
+                    userHandTotal -= 10;
+                    userHasAce = false;
                 }
             }
 
@@ -69,23 +65,18 @@ public class BlackJack extends Game{
             dealerHand.add(drawnCard2);
 
             for (Card card : dealerHand) {
-                try {
-                    int cardValue = Integer.parseInt(card.value);
-                    if (cardValue == 1) {
-                        cardValue += 10;
-                        dealerHasAce = true;
-                    }
-                    dealerHandTotal += cardValue;
 
-                } catch (NumberFormatException ex) {
-                    switch (card.value) {
-                        case "ACE" -> {
-                            dealerHandTotal += 1;
-                            dealerHasAce = true;
-                        }
-                        case "JACK", "QUEEN", "KING" -> userHandTotal += 10;
-                        default -> System.out.println("ERROR DATA FAILED 1");
-                    }
+                int tempValue = parseCard(card);
+
+                if (tempValue == 1){
+                    tempValue += 10;
+                    dealerHasAce = true;
+                }
+                dealerHandTotal += tempValue;
+
+                if (userHasAce && dealerHandTotal > 21) {
+                    dealerHandTotal -= 10;
+                    dealerHasAce = false;
                 }
             }
         }
@@ -93,7 +84,7 @@ public class BlackJack extends Game{
 
     /**
      * gets user input on decisions of what to do, double, hit, stand, split
-     *
+     * <p>
      * Calls: printKnownCards() startBetting() bustOrBJ() userDouble() userHit()
      * checkForWin() cleanHands() checkForDuplicateCards()
      */
@@ -117,43 +108,65 @@ public class BlackJack extends Game{
             printKnownCards();
 
             if (isFirstAsk && duplicateCards) {
-                System.out.println("Would you like to hit, stand, split, or double?");
+                System.out.println("Would you like to Hit[1], Stand[2], Double[3], or Split[4]?");
             } else if (isFirstAsk) {
-                System.out.println("Would you like to hit, stand, or double?");
+                System.out.println("Would you like to Hit[1], Stand[2], or Double[3]?");
             } else {
-                System.out.println("Would you like to hit or stand?");
+                System.out.println("Would you like to Hit[1] or Stand[2]?");
             }
 
             String userInput = console.nextLine();
+            int userInputParsed;
 
-            if (userInput.equals("double") || userInput.equals("hit") || userInput.equals("stand") ||
-                            userInput.equals("split")){
-                boolean verify = true;
-            }else {
-                System.out.println("Invalid input");
-                continue;
-            }
-
-            if (isFirstAsk && duplicateCards && userInput.equals("split")){
-                userSplitHand();
-                continue;
-            }else if (isFirstAsk && userInput.equals("double")){
-                userDouble();
-                return;
-            }else if (userInput.equals("double")) {
-                System.out.println("Invalid input");
-                continue;
-            }else if (userInput.equals("hit")){
-                userHit();
-                switch (bustOrBJ(userHandTotal, userHasAce, true)){
-                    case MatchEnd.BUST, MatchEnd.BLACKJACK -> {return;}
+            try{
+                userInputParsed = Integer.parseInt(userInput);
+                if (userInputParsed < 1 || userInputParsed > 4){
+                    System.out.println("Invalid input");
+                    continue;
                 }
-            } else {
-                checkForWin();
-                cleanHands();
-                return;
+            }catch (NumberFormatException Ex){
+                System.out.println("Invalid input");
+                continue;
             }
 
+            boolean invalidInput = false;
+
+            switch (userInputParsed){
+                case 1 -> {
+                    userHit();
+                    switch (bustOrBJ(userHandTotal, userHasAce, true)){
+                        case MatchEnd.BUST, MatchEnd.BLACKJACK -> {return;}
+                    }
+                }
+                case 2 -> {
+                    checkForWin();
+                    cleanHands();
+                }
+                case 3 -> {
+                    if (isFirstAsk && money >= bet){
+                        userDouble();
+                    }else {
+                        invalidInput = true;
+                        isFirstAsk = false;
+                    }
+                }
+                case 4 -> {
+                    if (isFirstAsk && duplicateCards){
+                        userSplitHand();
+                        splitHand = true;
+                    }else {
+                        invalidInput = true;
+                    }
+                }
+                default -> invalidInput = true;
+            }
+
+            if (invalidInput){
+                continue;
+            }
+            if (userHand.isEmpty() || dealerHand.isEmpty()){
+                return;
+            }
             if (isFirstAsk){
                 isFirstAsk = false;
             }
@@ -161,33 +174,69 @@ public class BlackJack extends Game{
     }
 
     private static void userSplitHand() {
-        
+
+        Card newCard1 = drawCards();
+        Card newCard2 = drawCards();
+
+        userSplitHand.add(userHand.get(1));
+        userHand.remove(1);
+
+        userHand.add(newCard1);
+        userSplitHand.add(newCard2);
+
+
+
+        userHandTotal = 0;
+        userSplitHandTotal = 0;
+
+        for (Card card : userHand) {
+
+            int tempValue = parseCard(card);
+
+            if (tempValue == 1){
+                tempValue += 10;
+                userHasAce = true;
+            }
+            userHandTotal += tempValue;
+            if (userHasAce && userHandTotal > 21) {
+                userHandTotal -= 10;
+                userHasAce = false;
+            }
+        }
+
+
+
+
+
     }
 
     private static boolean checkForDuplicateCards() {
-        int card1 = 0;
-        int card2 = 0;
+        int card1;
+        int card2;
 
-        try {
-            card1 = Integer.parseInt(userHand.get(0).value);
-        }catch (NumberFormatException ex){
-            switch (userHand.getFirst().value) {
-                case "ACE" -> card1 = 1;
-                case "JACK", "QUEEN", "KING" -> card1 = 10;
-                default -> System.out.println("ERROR DATA FAILED 1");
-            }
-        }
+        card1 = parseCard(userHand.get(0));
+        card2 = parseCard(userHand.get(1));
 
-        try {
-            card2 = Integer.parseInt(userHand.get(1).value);
-        }catch (NumberFormatException ex){
-            switch (userHand.get(1).value) {
-                case "ACE" -> card2 = 1;
-                case "JACK", "QUEEN", "KING" -> card2 = 10;
-                default -> System.out.println("ERROR DATA FAILED 1");
-            }
-        }
         return card1 == card2;
+    }
+
+    private static int parseCard(Card card) {
+        try {
+            return Integer.parseInt(card.value);
+        }catch (NumberFormatException ex){
+            switch (card.value) {
+                case "ACE" -> {
+                    return  1;
+                }
+                case "JACK", "QUEEN", "KING" -> {
+                    return  10;
+                }
+                default -> {
+                    System.out.println("ERROR DATA FAILED 1");
+                    return -99999;
+                }
+            }
+        }
     }
 
     private static MatchEnd bustOrBJ(int handTotal, boolean hasAce, boolean isPlayer) {
@@ -196,11 +245,10 @@ public class BlackJack extends Game{
             if (hasAce){
                 if (isPlayer) {
                     userHandTotal -= 10;
-                    handTotal -= 10;
                 }else {
                     dealerHandTotal -= 10;
-                    handTotal -= 10;
                 }
+                handTotal -= 10;
             }else {
                 if (isPlayer) {
                     System.out.println("Busted, You Lose");
@@ -212,6 +260,7 @@ public class BlackJack extends Game{
                 return MatchEnd.BUST;
             }
         }
+
         if (handTotal == 21) {
             if (isPlayer) {
                 System.out.println("Black Jack, You Win");
@@ -227,40 +276,15 @@ public class BlackJack extends Game{
     }
 
     private static void userHit() {
-
         Card drawnCard = drawCards();
-
         userHand.add(drawnCard);
-        try {
-            userHandTotal += Integer.parseInt(drawnCard.value);
-        } catch (NumberFormatException ex){
-            switch (drawnCard.value){
-                case "ACE" -> userHandTotal += 1;
-                case "JACK", "QUEEN", "KING" -> userHandTotal += 10;
-                default -> System.out.println("ERROR DATA FAILED 4");
-            }
-        }
+        userHandTotal += parseCard(drawnCard);
 
         System.out.println("You drew a " + drawnCard.value + " of " + drawnCard.suit);
-
     }
 
     private static void userDouble() {
-        Card drawnCard = drawCards();
-
-        userHand.add(drawnCard);
-
-        try {
-            userHandTotal += Integer.parseInt(drawnCard.value);
-        } catch (NumberFormatException ex){
-            switch (drawnCard.value){
-                case "ACE" -> userHandTotal += 1;
-                case "JACK", "QUEEN", "KING" -> userHandTotal += 10;
-                default -> System.out.println("ERROR DATA FAILED 3");
-            }
-        }
-
-        System.out.println("You drew a " + drawnCard.value + " of " + drawnCard.suit);
+        userHit();
 
         switch (bustOrBJ(userHandTotal, userHasAce, true)){
             case MatchEnd.BUST -> {return;}
@@ -299,40 +323,22 @@ public class BlackJack extends Game{
     }
 
     private static void checkForWin() {
-
         while (dealerHandTotal < 17) {
             Card dealerCard = drawCards();
-            try {
-                dealerHandTotal += Integer.parseInt(dealerCard.value);
-            } catch (NumberFormatException ex){
-                switch (dealerCard.value){
-                    case "ACE" -> dealerHandTotal += 1;
-                    case "JACK", "QUEEN", "KING" -> userHandTotal += 10;
-                    default -> System.out.println("ERROR DATA FAILED 5");
-                }
-            }
-
+            dealerHandTotal += parseCard(dealerCard);
             dealerHand.add(dealerCard);
         }
 
-        if (dealerHandTotal > 21){
-            System.out.println("Dealer Busted, You Win");
-            money += bet * bettingPower;
-            cleanHands();
-            return;
-        } else if (dealerHandTotal == 21) {
-            System.out.println("Dealer Black Jack, You Lose");
-            cleanHands();
-            return;
+        printDealerCards();
+        switch (bustOrBJ(dealerHandTotal, dealerHasAce, false)){
+            case MatchEnd.BUST -> {
+                money += bet * bettingPower;
+                return;
+            }
+            case MatchEnd.BLACKJACK -> {
+                return;
+            }
         }
-
-        System.out.println("The dealer has: ");
-
-        for (Card value : dealerHand) {
-            System.out.print(value.value + " of " + value.suit + "\n");
-        }
-
-        System.out.println("Which totals to " + dealerHandTotal);
 
         if (userHandTotal > dealerHandTotal) {
             money += bet * bettingPower;
@@ -340,6 +346,16 @@ public class BlackJack extends Game{
         }else {
             System.out.println("You lose");
         }
+    }
+
+    private static void printDealerCards() {
+        System.out.println("The dealer has: ");
+
+        for (Card value : dealerHand) {
+            System.out.print(value.value + " of " + value.suit + "\n");
+        }
+
+        System.out.println("Which totals to " + dealerHandTotal);
     }
 
     private static void printKnownCards(){
@@ -351,8 +367,8 @@ public class BlackJack extends Game{
 
         System.out.println("Your current cards are: ");
 
-        for (int card = 0; card < userHand.size(); card++) {
-            System.out.print(userHand.get(card).value + " of " + userHand.get(card).suit + "\n");
+        for (Card value : userHand) {
+            System.out.print(value.value + " of " + value.suit + "\n");
         }
 
         System.out.println("That totals to " + userHandTotal + "\n");
@@ -360,12 +376,12 @@ public class BlackJack extends Game{
 
     private static void cleanHands(){
 
-        for (Card card : userHand){
-            userHand.remove(card);
+        if (!userHand.isEmpty()) {
+            userHand.subList(0, userHand.size()).clear();
         }
 
-        for (Card card : dealerHand){
-            dealerHand.remove(card);
+        if (!dealerHand.isEmpty()) {
+            dealerHand.subList(0, dealerHand.size()).clear();
         }
     }
 }

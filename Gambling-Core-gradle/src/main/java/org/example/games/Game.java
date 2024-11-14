@@ -14,12 +14,14 @@ public class Game {
 
     public static Deck deck;
     public static GsonBuilder dataWriter = new GsonBuilder();
+    public static int shuffleCount = 0;
 
     public Game(){}
 
+    /**
+     * Creates a new deck using  the deckOfCardsAPI
+     */
     static void createNewDeck() {
-
-
         URLConnection deckURl;
         try {
             deckURl = new URL("https://deckofcardsapi.com/api/"
@@ -37,8 +39,11 @@ public class Game {
         }
     }
 
+    /**
+     * Gets a card from the deck at random using the deckOfCardsAPI
+     * @return card's data
+     */
     static InputStream getNewCard() {
-
 
         URLConnection deckURl;
         try {
@@ -51,6 +56,12 @@ public class Game {
         }
     }
 
+    /**
+     * after receiving card data, parses the data into the respective properties of
+     * the card.
+     *  <p> Calls {@link Game#getNewCard()} {@link Game#removeBrackets(String)}
+     * @return newCard
+     */
     static Card drawCards(){
 
         Card newCard;
@@ -60,9 +71,9 @@ public class Game {
         Scanner deckHandler = new Scanner(getNewCard());
         String data = deckHandler.useDelimiter("\\A").next();
 
-        JsonElement rootnode = JsonParser.parseString(data);
+        JsonElement rootNode = JsonParser.parseString(data);
 
-        JsonObject deckDetails = rootnode.getAsJsonObject();
+        JsonObject deckDetails = rootNode.getAsJsonObject();
         JsonArray cardDetails = deckDetails.getAsJsonArray("cards");
 
         String cardValues = String.valueOf(cardDetails);
@@ -73,7 +84,11 @@ public class Game {
         return newCard;
     }
 
-
+    /**
+     * removes brackets from data to allow it to be parsed directly to a subject
+     * @param string to be cleaned
+     * @return cleaned data
+     */
     private static String removeBrackets(String string){
         StringBuilder returningString = new StringBuilder();
         for (int i = 0; i < string.length(); i++) {
@@ -89,6 +104,9 @@ public class Game {
         return String.valueOf(returningString);
     }
 
+    /**
+     * reshuffles the deck allowing for extended play
+     */
     public static void shuffleDeck(){
         URLConnection deckURl;
         try {
@@ -101,6 +119,9 @@ public class Game {
             String data = deckHandler.useDelimiter("\\A").next();
 
             deck = gson.fromJson(data, Deck.class);
+
+            shuffleCount++;
+            System.out.println("Deck Shuffled, you are on shuffle " + shuffleCount);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

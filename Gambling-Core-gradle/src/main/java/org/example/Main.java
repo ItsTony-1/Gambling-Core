@@ -1,21 +1,11 @@
 package org.example;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.example.games.BlackJack;
+import org.example.games.Game;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main {
-
-    //region texas hold 'em
-    public static ArrayList <Card> theRiver = new ArrayList<>();
-    //endRegion
 
     static Scanner console = new Scanner(System.in);
     static BlackJack blackJack = new BlackJack();
@@ -23,7 +13,6 @@ public class Main {
     public static void main(String[] args) {
 
         boolean gameSelected = false;
-        boolean gameIsBlackJack = false;
         String userInput;
 
         while (!gameSelected) {
@@ -34,25 +23,15 @@ public class Main {
             switch (userInput){
                 case "Blackjack" -> {
                     gameSelected = true;
-                    gameIsBlackJack = true;
+                    playBlackJack();
                 }
                 case "Texas Hold Em" -> {
                     gameSelected = true;
-                    gameIsBlackJack = false;
+                    playTexasHolEm();
                 }
                 default -> System.out.println("Not a game. Please choose a game or double check spelling");
             }
-
-            if (gameSelected){
-                if (gameIsBlackJack){
-                    playBlackJack();
-                }else {
-                    playTexasHolEm();
-                }
-            }
-
         }
-
     }
 
     private static void playTexasHolEm() {
@@ -65,44 +44,41 @@ public class Main {
 
         while(playing){
 
-
             blackJack.startPlaying(true);
             blackJack.startPlaying(false);
 
             blackJack.getUserInput();
 
-            System.out.println("Would you like to play again?");
+            System.out.println("Would you like to play again? [Y]/[N]");
             while(true) {
                 String userInput = console.nextLine();
 
-                if (userInput.equals("yes") || userInput.equals("no")){
-                    boolean verify = true;
-                }else continue;
-
-                if (userInput.equals("no")){
+                if (userInput.equalsIgnoreCase("no") ||
+                        userInput.equalsIgnoreCase("n")){
                     playing = false;
-                } else if (blackJack.money <= 0) {
+                    break;
+                } else if (blackJack.money <= 4) {
+                    System.out.println("DAMN YOU BROKE, GET AWAY FROM OUR TABLE");
                     playing = false;
-                } else if (userInput.equals("yes")) {
+                    break;
+                } else if (userInput.equalsIgnoreCase("yes") ||
+                            userInput.equalsIgnoreCase("y")) {
                     break;
                 }
+
+                System.out.println("Invalid input");
             }
 
-            if (Double.parseDouble(blackJack.deck.remaining) < Math.round(Double.parseDouble(blackJack.deck.remaining) * 0.60)){
-                blackJack.shuffleDeck();
+            if (Double.parseDouble(Game.deck.remaining) < Math.round(Double.parseDouble(Game.deck.remaining) * 0.60)){
+                Game.shuffleDeck();
             }
         }
         if (blackJack.money > 2500){
-            System.out.println("You left with $" + blackJack.money + ". Thats a gain of $" +
+            System.out.println("You left with $" + blackJack.money + ". That is a gain of $" +
                     (blackJack.money - 2500));
         } else if (blackJack.money < 2500) {
-            System.out.println("You left with $" + blackJack.money + ". Thats a loss of $" +
+            System.out.println("You left with $" + blackJack.money + ". That is a loss of $" +
                     (2500 - blackJack.money));
         }
-
-
-
     }
-
-
 }
