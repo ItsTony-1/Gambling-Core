@@ -2,7 +2,6 @@ package org.example.games;
 
 import org.example.Card;
 
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class BlackJack extends Game{
@@ -15,16 +14,9 @@ public class BlackJack extends Game{
 
     static Scanner console = new Scanner(System.in);
 
-    public static ArrayList<Card> userHand = new ArrayList<>();
-    public static ArrayList<Card> userSplitHand = new ArrayList<>();
-    static int userHandTotal = 0;
-    static int userSplitHandTotal = 0;
-    static boolean userHasAce = false;
-    static boolean splitHand = false;
-
-    public static ArrayList <Card> dealerHand = new ArrayList<>();
-    static int dealerHandTotal = 0;
-    static boolean dealerHasAce = false;
+    public static Hand userHand = new Hand(false, "Main Hand");
+    public static Hand userSplitHand = new Hand(true, "Secondary Hand");
+    public static Hand dealerHand = new Hand(false, "Dealer Hand");
 
     public BlackJack(){
         dataWriter.setPrettyPrinting();
@@ -33,7 +25,7 @@ public class BlackJack extends Game{
 
     /**
      * Draws 2 cards and gives them to either the player or the dealer
-     * <p> Calls: {@link Game#drawCards()} {@link BlackJack#parseCard(Card)}
+     * <p> Calls: {@link Game#drawCards()} {@link BlackJack#loopThroughHand(Hand)}
      * @param toPlayer whether it goes to the player or dealer
      */
     public static void startPlaying(boolean toPlayer){
@@ -45,67 +37,49 @@ public class BlackJack extends Game{
             userHand.add(drawnCard);
             userHand.add(drawnCard2);
 
-            for (Card card : userHand) {
-
-                int tempValue = parseCard(card);
-
-                if (tempValue == 1){
-                    tempValue += 10;
-                    userHasAce = true;
-                }
-                userHandTotal += tempValue;
-                if (userHasAce && userHandTotal > 21) {
-                    userHandTotal -= 10;
-                    userHasAce = false;
-                }
-            }
-
+            loopThroughHand(userHand);
         }else {
             dealerHand.add(drawnCard);
             dealerHand.add(drawnCard2);
 
-            for (Card card : dealerHand) {
-
-                int tempValue = parseCard(card);
-
-                if (tempValue == 1){
-                    tempValue += 10;
-                    dealerHasAce = true;
-                }
-                dealerHandTotal += tempValue;
-
-                if (userHasAce && dealerHandTotal > 21) {
-                    dealerHandTotal -= 10;
-                    dealerHasAce = false;
-                }
-            }
+            loopThroughHand(dealerHand);
         }
     }
 
     /**
-     * gets user input on decisions of what to do, double, hit, stand, split
+     * Pre-Game Betting & determines an early win
      * <p>
-     * Calls: printKnownCards() startBetting() bustOrBJ() userDouble() userHit()
-     * checkForWin() cleanHands() checkForDuplicateCards()
+     * Calls: {@link BlackJack#printKnownCards(Hand)} {@link BlackJack#startBetting()}
+     * {@link BlackJack#bustOrBJ(Hand, boolean)} {@link BlackJack#playGame(Hand, Boolean)}
      */
     public static void getUserInput(){
-
-        boolean isFirstAsk = true;
-        boolean duplicateCards = checkForDuplicateCards();
-
-        printKnownCards();
+        printKnownCards(userHand);
         startBetting();
 
-        switch (bustOrBJ(userHandTotal, userHasAce, true)){
+        switch (bustOrBJ(userHand, true)){
             case MatchEnd.BUST, MatchEnd.BLACKJACK -> {return;}
         }
 
-        switch (bustOrBJ(dealerHandTotal, dealerHasAce, false)){
+        switch (bustOrBJ(dealerHand, false)){
             case MatchEnd.BUST, MatchEnd.BLACKJACK -> {return;}
         }
+
+        playGame(userHand, true);
+    }
+
+    /**
+     * Gets user input on decisions of what to do, double, hit, stand, split
+     * <p> Calls: {@link BlackJack#checkForDuplicateCards(Hand)} {@link BlackJack#printKnownCards(Hand)}
+     * {@link BlackJack#userHit(Hand)} {@link BlackJack#userDouble()} {@link BlackJack#userSplitHand()}
+     * {@link BlackJack#checkForWin(Hand)} {@link BlackJack#cleanHands()}
+     * @param hand The list of cards allocated to either the user or dealer
+     */
+    private static void playGame(Hand hand, Boolean isFirstAsk) {
+
+        boolean duplicateCards = checkForDuplicateCards(hand);
 
         while(true) {
-            printKnownCards();
+            printKnownCards(hand);
 
             if (isFirstAsk && duplicateCards) {
                 System.out.println("Would you like to Hit[1], Stand[2], Double[3], or Split[4]?");
@@ -133,19 +107,31 @@ public class BlackJack extends Game{
 
             switch (userInputParsed){
                 case 1 -> {
-                    userHit();
-                    switch (bustOrBJ(userHandTotal, userHasAce, true)){
+                    userHit(hand);
+                    switch (bustOrBJ(hand, true)){
                         case MatchEnd.BUST, MatchEnd.BLACKJACK -> {return;}
                     }
                 }
                 case 2 -> {
-                    checkForWin();
+                    if (hand.handSplit){
+                        return;
+                    }
+                    checkForWin(hand);
                     cleanHands();
                 }
                 case 3 -> {
                     if (isFirstAsk && money >= bet){
                         userDouble();
+                        return;
                     }else {
+                        System.out.print("Invalid Input, ");
+
+                        if (!isFirstAsk){
+                            System.out.println("Not available");
+                        }else {
+                            System.out.println("Not enough Money");
+                        }
+
                         invalidInput = true;
                         isFirstAsk = false;
                     }
@@ -153,8 +139,18 @@ public class BlackJack extends Game{
                 case 4 -> {
                     if (isFirstAsk && duplicateCards){
                         userSplitHand();
-                        splitHand = true;
+                        userHand.handSplit = true;
+                        return;
                     }else {
+
+                        System.out.print("Invalid Input, ");
+
+                        if (!isFirstAsk){
+                            System.out.println("Not available");
+                        }else {
+                            System.out.println("You Don't have duplicate cards");
+                        }
+
                         invalidInput = true;
                     }
                 }
@@ -173,53 +169,80 @@ public class BlackJack extends Game{
         }
     }
 
+    /**
+     * Splits the user's hand into 2 separate hands, has the user play the game with both hands
+     * <p> Calls: {@link Game#drawCards()} {@link BlackJack#loopThroughHand(Hand)}
+     * {@link BlackJack#playGame(Hand, Boolean)} {@link BlackJack#checkForWin(Hand)} {@link BlackJack#cleanHands()}
+     */
     private static void userSplitHand() {
 
         Card newCard1 = drawCards();
         Card newCard2 = drawCards();
 
-        userSplitHand.add(userHand.get(1));
-        userHand.remove(1);
+        userHand.handSplit = true;
+
+        userSplitHand.add(userHand.remove(1));
 
         userHand.add(newCard1);
         userSplitHand.add(newCard2);
 
+        userHand.total = 0;
+        userSplitHand.total = 0;
 
+        loopThroughHand(userHand);
+        loopThroughHand(userSplitHand);
 
-        userHandTotal = 0;
-        userSplitHandTotal = 0;
+        playGame(userHand, false);
+        playGame(userSplitHand, false);
 
-        for (Card card : userHand) {
+        checkForWin(userHand);
+        checkForWin(userSplitHand);
+
+        cleanHands();
+    }
+
+    /**
+     * Loops through a list of cards, totals the value of those card
+     * <p> Calls: {@link BlackJack#parseCard(Card)}
+     * @param hand That gets looped through
+     */
+    private static void loopThroughHand(Hand hand) {
+        for (Card card : hand) {
 
             int tempValue = parseCard(card);
 
             if (tempValue == 1){
                 tempValue += 10;
-                userHasAce = true;
+                hand.hasAce = true;
             }
-            userHandTotal += tempValue;
-            if (userHasAce && userHandTotal > 21) {
-                userHandTotal -= 10;
-                userHasAce = false;
+            hand.total += tempValue;
+            if (hand.hasAce && hand.total > 21) {
+                hand.total -= 10;
+                hand.hasAce = false;
             }
         }
-
-
-
-
-
     }
 
-    private static boolean checkForDuplicateCards() {
+    /**
+     * Checks to see if the hands starting cards are the same
+     * @param hand Hand to check
+     * @return true if card1 is the same as card2
+     */
+    private static boolean checkForDuplicateCards(Hand hand) {
         int card1;
         int card2;
 
-        card1 = parseCard(userHand.get(0));
-        card2 = parseCard(userHand.get(1));
+        card1 = parseCard(hand.get(0));
+        card2 = parseCard(hand.get(1));
 
         return card1 == card2;
     }
 
+    /**
+     * Checks a card's value then returns it numerically
+     * @param card The card that gets its value checked
+     * @return The int value of a card
+     */
     private static int parseCard(Card card) {
         try {
             return Integer.parseInt(card.value);
@@ -239,16 +262,17 @@ public class BlackJack extends Game{
         }
     }
 
-    private static MatchEnd bustOrBJ(int handTotal, boolean hasAce, boolean isPlayer) {
+    /**
+     * Checks to see if a hand Busts or gets a Black Jack
+     * @param hand to check
+     * @param isPlayer if the hand being Checked is the Player's hand
+     * @return {@link MatchEnd}
+     */
+    private static MatchEnd bustOrBJ(Hand hand, boolean isPlayer) {
 
-        if (handTotal > 21){
-            if (hasAce){
-                if (isPlayer) {
-                    userHandTotal -= 10;
-                }else {
-                    dealerHandTotal -= 10;
-                }
-                handTotal -= 10;
+        if (hand.total > 21){
+            if (hand.hasAce){
+                hand.total -= 10;
             }else {
                 if (isPlayer) {
                     System.out.println("Busted, You Lose");
@@ -261,7 +285,7 @@ public class BlackJack extends Game{
             }
         }
 
-        if (handTotal == 21) {
+        if (hand.total == 21) {
             if (isPlayer) {
                 System.out.println("Black Jack, You Win");
                 money += bet * bettingPower;
@@ -275,18 +299,31 @@ public class BlackJack extends Game{
         return MatchEnd.IGNORE;
     }
 
-    private static void userHit() {
+    /**
+     * Adds card to a hand & adds the value of that card to the total
+     * @param hand Hand to add card to
+     */
+    private static void userHit(Hand hand) {
         Card drawnCard = drawCards();
-        userHand.add(drawnCard);
-        userHandTotal += parseCard(drawnCard);
+        hand.add(drawnCard);
+        hand.total += parseCard(drawnCard);
 
         System.out.println("You drew a " + drawnCard.value + " of " + drawnCard.suit);
     }
 
+    /**
+     * Doubles bet, draws a card then checks for win
+     * <p> Calls: {@link BlackJack#bustOrBJ(Hand, boolean)} {@link BlackJack#userHit(Hand)}
+     * {@link BlackJack#checkForWin(Hand)} {@link BlackJack#cleanHands()}
+     */
     private static void userDouble() {
-        userHit();
 
-        switch (bustOrBJ(userHandTotal, userHasAce, true)){
+        money -= bet;
+        bet += bet;
+
+        userHit(userHand);
+
+        switch (bustOrBJ(userHand, true)){
             case MatchEnd.BUST -> {return;}
             case MatchEnd.BLACKJACK -> {
                 money += bet * bettingPower;
@@ -294,10 +331,15 @@ public class BlackJack extends Game{
             }
         }
 
-        checkForWin();
-        cleanHands();
+        if (!userHand.handSplit) {
+            checkForWin(userHand);
+            cleanHands();
+        }
     }
 
+    /**
+     * Gets input from user how much they want to bet, must be greater than $5
+     */
     private static void startBetting() {
         while(true) {
             System.out.println("How much do you want to bet?" + "\n");
@@ -310,7 +352,7 @@ public class BlackJack extends Game{
                     System.out.println("You don't have enough money");
                     continue;
                 }
-                if (bet > 5) {
+                if (bet >= 5) {
                     money -= bet;
                     return;
                 }else {
@@ -322,15 +364,23 @@ public class BlackJack extends Game{
         }
     }
 
-    private static void checkForWin() {
-        while (dealerHandTotal < 17) {
+    /**
+     * Checks for win for a hand
+     * <p>If dealer has < 17 in total cardValue, dealer hits</p>
+     * Calls: {@link BlackJack#printDealerCards()} {@link BlackJack#bustOrBJ(Hand, boolean)}
+     * @param hand Hand that win is Checked for
+     */
+    private static void checkForWin(Hand hand) {
+        while (dealerHand.total < 17) {
             Card dealerCard = drawCards();
-            dealerHandTotal += parseCard(dealerCard);
+            dealerHand.total += parseCard(dealerCard);
             dealerHand.add(dealerCard);
         }
 
-        printDealerCards();
-        switch (bustOrBJ(dealerHandTotal, dealerHasAce, false)){
+        if (hand.handSplit && !hand.handName.equals(userSplitHand.handName)) {
+            printDealerCards();
+        }
+        switch (bustOrBJ(dealerHand, false)){
             case MatchEnd.BUST -> {
                 money += bet * bettingPower;
                 return;
@@ -340,14 +390,17 @@ public class BlackJack extends Game{
             }
         }
 
-        if (userHandTotal > dealerHandTotal) {
+        if (hand.total > dealerHand.total) {
             money += bet * bettingPower;
-            System.out.println("You Win");
+            System.out.println(hand.handName + " Wins");
         }else {
-            System.out.println("You lose");
+            System.out.println(hand.handName + " loses");
         }
     }
 
+    /**
+     * Prints the dealer's cards
+     */
     private static void printDealerCards() {
         System.out.println("The dealer has: ");
 
@@ -355,33 +408,48 @@ public class BlackJack extends Game{
             System.out.print(value.value + " of " + value.suit + "\n");
         }
 
-        System.out.println("Which totals to " + dealerHandTotal);
+        System.out.println("Which totals to " + dealerHand.total);
     }
 
-    private static void printKnownCards(){
+    /**
+     * Prints known dealer Card & Hand user is currently playing with
+     * @param hand User hand currently in use
+     */
+    private static void printKnownCards(Hand hand){
 
         int firstCard = 0;
 
         System.out.println("The dealer's known card is " + dealerHand.get(firstCard).value + " of "
                 + dealerHand.get(firstCard).suit + "\n");
 
-        System.out.println("Your current cards are: ");
+        System.out.println("Your current cards in your " + hand.handName + " are: ");
 
-        for (Card value : userHand) {
+        for (Card value : hand) {
             System.out.print(value.value + " of " + value.suit + "\n");
         }
 
-        System.out.println("That totals to " + userHandTotal + "\n");
+        System.out.println("That totals to " + hand.total + "\n");
+
     }
 
+    /**
+     * Removes all cards from all hands
+     */
     private static void cleanHands(){
 
         if (!userHand.isEmpty()) {
             userHand.subList(0, userHand.size()).clear();
+            userHand.total = 0;
+        }
+
+        if (!userSplitHand.isEmpty()){
+            userSplitHand.subList(0,userSplitHand.size()).clear();
+            userSplitHand.total = 0;
         }
 
         if (!dealerHand.isEmpty()) {
             dealerHand.subList(0, dealerHand.size()).clear();
+            dealerHand.total = 0;
         }
     }
 }
