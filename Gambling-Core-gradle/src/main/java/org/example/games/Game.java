@@ -4,13 +4,14 @@ import com.google.gson.*;
 import org.example.Card;
 import org.example.Deck;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Scanner;
 
-public class Game {
+public class Game extends JPanel {
 
     public static Deck deck;
     public static GsonBuilder dataWriter = new GsonBuilder();

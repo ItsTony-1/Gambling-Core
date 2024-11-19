@@ -2,6 +2,7 @@ package org.example.games;
 
 import org.example.Card;
 
+import javax.swing.*;
 import java.util.Scanner;
 
 public class BlackJack extends Game{
@@ -14,13 +15,18 @@ public class BlackJack extends Game{
 
     static Scanner console = new Scanner(System.in);
 
+
+
     public static Hand userHand = new Hand(false, "Main Hand");
     public static Hand userSplitHand = new Hand(true, "Secondary Hand");
     public static Hand dealerHand = new Hand(false, "Dealer Hand");
 
+    public static Hand currentHand = userHand;
+
     public BlackJack(){
         dataWriter.setPrettyPrinting();
         createNewDeck();
+        createBlackjackScreen();
     }
 
     /**
@@ -71,7 +77,7 @@ public class BlackJack extends Game{
      * Gets user input on decisions of what to do, double, hit, stand, split
      * <p> Calls: {@link BlackJack#checkForDuplicateCards(Hand)} {@link BlackJack#printKnownCards(Hand)}
      * {@link BlackJack#userHit(Hand)} {@link BlackJack#userDouble()} {@link BlackJack#userSplitHand()}
-     * {@link BlackJack#checkForWin(Hand)} {@link BlackJack#cleanHands()}
+     * {@link BlackJack#stand(Hand)}
      * @param hand The list of cards allocated to either the user or dealer
      */
     private static void playGame(Hand hand, Boolean isFirstAsk) {
@@ -113,11 +119,8 @@ public class BlackJack extends Game{
                     }
                 }
                 case 2 -> {
-                    if (hand.handSplit){
-                        return;
-                    }
-                    checkForWin(hand);
-                    cleanHands();
+                    stand(hand);
+                    return;
                 }
                 case 3 -> {
                     if (isFirstAsk && money >= bet){
@@ -170,6 +173,19 @@ public class BlackJack extends Game{
     }
 
     /**
+     * Ends the hand's dialogue
+     * <p>Calls: {@link BlackJack#checkForWin(Hand)} {@link BlackJack#cleanHands()}
+     * @param hand Hand that gets checked
+     */
+    private static void stand(Hand hand) {
+        if (hand.handSplit){
+            return;
+        }
+        checkForWin(hand);
+        cleanHands();
+    }
+
+    /**
      * Splits the user's hand into 2 separate hands, has the user play the game with both hands
      * <p> Calls: {@link Game#drawCards()} {@link BlackJack#loopThroughHand(Hand)}
      * {@link BlackJack#playGame(Hand, Boolean)} {@link BlackJack#checkForWin(Hand)} {@link BlackJack#cleanHands()}
@@ -190,6 +206,7 @@ public class BlackJack extends Game{
         userSplitHand.total = 0;
 
         loopThroughHand(userHand);
+        currentHand = userSplitHand;
         loopThroughHand(userSplitHand);
 
         playGame(userHand, false);
@@ -273,6 +290,7 @@ public class BlackJack extends Game{
         if (hand.total > 21){
             if (hand.hasAce){
                 hand.total -= 10;
+                hand.hasAce = false;
             }else {
                 if (isPlayer) {
                     System.out.println("Busted, You Lose");
@@ -280,7 +298,9 @@ public class BlackJack extends Game{
                     System.out.println("Dealer Busted, You Win");
                     money += bet * bettingPower;
                 }
-                cleanHands();
+                if (!hand.handSplit) {
+                    cleanHands();
+                }
                 return MatchEnd.BUST;
             }
         }
@@ -292,7 +312,9 @@ public class BlackJack extends Game{
             }else {
                 System.out.println("Dealer Black Jack, Dealer Win");
             }
-            cleanHands();
+            if (!hand.handSplit) {
+                cleanHands();
+            }
             return MatchEnd.BLACKJACK;
         }
 
@@ -451,5 +473,69 @@ public class BlackJack extends Game{
             dealerHand.subList(0, dealerHand.size()).clear();
             dealerHand.total = 0;
         }
+    }
+
+    /**
+     * Creates the GUI of the BlackJack table
+     */
+    public void createBlackjackScreen(){
+
+        this.setVisible(true);
+
+        JPanel dealerHand = new JPanel();
+        JPanel userHand1 = new JPanel();
+        JPanel userHand2 = new JPanel();
+        JPanel betting = new JPanel();
+        JPanel options = new JPanel();
+
+        dealerHand.setVisible(true);
+        userHand1.setVisible(true);
+        userHand2.setVisible(true);
+        betting.setVisible(true);
+        options.setVisible(true);
+
+        JSplitPane userDealerSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        JSplitPane dealerBettingSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JSplitPane userHandSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JSplitPane gameOptionsSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+
+        userDealerSplit.setVisible(true);
+        dealerBettingSplit.setVisible(true);
+        userHandSplit.setVisible(true);
+        gameOptionsSplit.setVisible(true);
+
+        gameOptionsSplit.setDividerLocation(1920-1920/3);
+
+        this.add(gameOptionsSplit);
+        gameOptionsSplit.setRightComponent(options);
+        gameOptionsSplit.setLeftComponent(userDealerSplit);
+
+        userDealerSplit.setTopComponent(dealerBettingSplit);
+        dealerBettingSplit.setLeftComponent(dealerHand);
+        dealerBettingSplit.setRightComponent(betting);
+
+        userDealerSplit.setBottomComponent(userHandSplit);
+        userHandSplit.setLeftComponent(userHand1);
+        userDealerSplit.setRightComponent(userHand2);
+
+        JButton hit = new JButton("Hit");
+        hit.setVisible(true);
+        hit.addActionListener(e -> {
+            userHit(currentHand);
+        });
+
+        JButton stand = new JButton("Stand");
+
+        JButton doubleB = new JButton("double");
+
+        JButton splitHand = new JButton("Split hand");
+
+
+        options.setLayout(new BoxLayout(options, BoxLayout.Y_AXIS));
+        options.add(hit);
+        options.add(stand);
+        options.add(doubleB);
+        options.add(splitHand);
+
     }
 }
