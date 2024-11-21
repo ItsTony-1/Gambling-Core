@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.games.BlackJack;
 import org.example.games.Game;
+import org.example.games.TexasHoldEm;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,13 +12,15 @@ public class Main {
 
     static Scanner console = new Scanner(System.in);
     static BlackJack blackJack = new BlackJack();
+    static TexasHoldEm texasHoldEm = new TexasHoldEm();
 
     static JFrame frame = new JFrame();
 
     public static void main(String[] args) {
 
-        //createGUI();
+        createGUI();
 
+        /*
         boolean gameSelected = false;
         String userInput;
 
@@ -37,7 +40,7 @@ public class Main {
                 }
                 default -> System.out.println("Not a game. Please choose a game or double check spelling");
             }
-        }
+        } */
     }
 
     private static void createGUI() {
@@ -46,6 +49,14 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
+        JPanel contentPane = new JPanel();
+
+        contentPane.setBorder(
+                BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        contentPane.setLayout(new CardLayout());
+
+
+        //region main menu
         JPanel mainScreen = new JPanel();
         JPanel mainScreenInner = new JPanel();
 
@@ -65,14 +76,12 @@ public class Main {
         mainScreenInner.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
-
-
         JLabel qAsker = new JLabel("Would you like to play Black Jack or Texas Hold 'Em");
         qAsker.setSize(1000,700);
         qAsker.setVisible(true);
 
         constraints.fill = GridBagConstraints.HORIZONTAL;
-        constraints.ipady = 40;      //make this component tall
+        constraints.ipady = 40;
         constraints.weightx = 0.0;
         constraints.gridwidth = 3;
         constraints.gridx = 0;
@@ -83,6 +92,8 @@ public class Main {
         blackJack.setVisible(true);
         blackJack.setSize(600,300);
         blackJack.addActionListener(e -> {
+            CardLayout cardLayout = (CardLayout) contentPane.getLayout();
+            cardLayout.next(contentPane);
             playBlackJack();
         });
 
@@ -97,10 +108,12 @@ public class Main {
         texasHold.setVisible(true);
         texasHold.setSize(600,300);
         texasHold.addActionListener(e -> {
+            CardLayout cardLayout = (CardLayout) contentPane.getLayout();
+            cardLayout.last(contentPane);
             playTexasHolEm();
         });
 
-        constraints.ipady = 40;      //make this component tall
+        constraints.ipady = 40;
         constraints.weightx = 0.0;
         constraints.gridwidth = 2;
         constraints.gridx = 1;
@@ -109,8 +122,16 @@ public class Main {
 
         mainScreenInner.revalidate();
         mainScreenInner.repaint();
+        //endregion
 
-        frame.add(mainScreen);
+
+        contentPane.add(mainScreen, "Main Menu");
+        contentPane.add(blackJack, "Black Jack");
+        contentPane.add(texasHoldEm, "Texas Hold 'Em");
+        frame.setContentPane(contentPane);
+        frame.pack();
+        frame.setLocationByPlatform(true);
+        frame.setVisible(true);
 
         frame.revalidate();
         frame.repaint();
@@ -124,9 +145,11 @@ public class Main {
 
         boolean playing = true;
 
-        frame.add(blackJack);
-        frame.repaint();
-        frame.revalidate();
+        frame.setContentPane(blackJack);
+
+        frame.getContentPane().repaint();
+        frame.getContentPane().revalidate();
+        System.out.println();
 
         while(playing){
 

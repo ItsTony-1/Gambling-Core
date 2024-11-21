@@ -481,6 +481,7 @@ public class BlackJack extends Game{
     public void createBlackjackScreen(){
 
         this.setVisible(true);
+        this.setName("BlackJack");
 
         JPanel dealerHand = new JPanel();
         JPanel userHand1 = new JPanel();
