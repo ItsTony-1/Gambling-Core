@@ -45,15 +45,16 @@ public class Main {
 
     private static void createGUI() {
 
-        frame.setSize(1600, 900);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
         JPanel contentPane = new JPanel();
 
         contentPane.setBorder(
-                BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                BorderFactory.createLineBorder(Color.BLACK, 5));
         contentPane.setLayout(new CardLayout());
+        contentPane.setPreferredSize(new Dimension(1440,810));
+
 
 
         //region main menu
@@ -73,6 +74,8 @@ public class Main {
         verticalBox.add(Box.createVerticalGlue());
 
         mainScreen.add(verticalBox);
+        mainScreen.setPreferredSize(new Dimension(1440,810));
+
         mainScreenInner.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
@@ -88,20 +91,20 @@ public class Main {
         constraints.gridy = 0;
         mainScreenInner.add(qAsker, constraints);
 
-        JButton blackJack = new JButton("BlackJack");
-        blackJack.setVisible(true);
-        blackJack.setSize(600,300);
-        blackJack.addActionListener(e -> {
+        JButton blackJackButton = new JButton("BlackJack");
+        blackJackButton.setVisible(true);
+        blackJackButton.setSize(600,300);
+        blackJackButton.addActionListener(e -> {
             CardLayout cardLayout = (CardLayout) contentPane.getLayout();
             cardLayout.next(contentPane);
-            playBlackJack();
+            //playBlackJack();
         });
 
         constraints.ipady = 40;
         constraints.gridwidth = 1;
         constraints.gridx = 0;
         constraints.gridy = 1;
-        mainScreenInner.add(blackJack, constraints);
+        mainScreenInner.add(blackJackButton, constraints);
 
 
         JButton texasHold = new JButton("Texas Hold 'Em");
@@ -120,6 +123,8 @@ public class Main {
         constraints.gridy = 1;
         mainScreenInner.add(texasHold, constraints);
 
+
+
         mainScreenInner.revalidate();
         mainScreenInner.repaint();
         //endregion
@@ -128,6 +133,7 @@ public class Main {
         contentPane.add(mainScreen, "Main Menu");
         contentPane.add(blackJack, "Black Jack");
         contentPane.add(texasHoldEm, "Texas Hold 'Em");
+
         frame.setContentPane(contentPane);
         frame.pack();
         frame.setLocationByPlatform(true);
