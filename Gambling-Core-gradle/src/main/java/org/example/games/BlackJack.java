@@ -210,13 +210,34 @@ public class BlackJack extends Game{
         currentHand = userSplitHand;
         loopThroughHand(userSplitHand);
 
-        //playGame(userHand, false);
-        //playGame(userSplitHand, false);
+        playGame(userHand, false);
+        playGame(userSplitHand, false);
 
-        //checkForWin(userHand);
-        //checkForWin(userSplitHand);
+        checkForWin(userHand);
+        checkForWin(userSplitHand);
 
-        //cleanHands();
+        cleanHands();
+    }
+
+    private static void userSplitHandUI(){
+
+        Card newCard1 = drawCards();
+        Card newCard2 = drawCards();
+
+        userHand.handSplit = true;
+
+        userSplitHand.add(userHand.remove(1));
+
+        userHand.add(newCard1);
+        userSplitHand.add(newCard2);
+
+        userHand.total = 0;
+        userSplitHand.total = 0;
+
+        loopThroughHand(userHand);
+        currentHand = userSplitHand;
+        loopThroughHand(userSplitHand);
+
     }
 
     /**
@@ -332,6 +353,14 @@ public class BlackJack extends Game{
         hand.total += parseCard(drawnCard);
 
         System.out.println("You drew a " + drawnCard.value + " of " + drawnCard.suit);
+    }
+
+    private static Image userHitUI(Hand hand) {
+        Card drawnCard = drawCards();
+        hand.add(drawnCard);
+        hand.total += parseCard(drawnCard);
+
+        return drawnCard.getCardImage();
     }
 
     /**
@@ -488,13 +517,13 @@ public class BlackJack extends Game{
 
 
         //region Panel set up
-        JPanel dealerHand = new JPanel();
+        JPanel dealerHandPanel = new JPanel();
         JPanel userHand1 = new JPanel();
         JPanel userHand2 = new JPanel();
         JPanel betting = new JPanel();
         JPanel options = new JPanel();
 
-        dealerHand.setVisible(true);
+        dealerHandPanel.setVisible(true);
         userHand1.setVisible(true);
         userHand2.setVisible(true);
         betting.setVisible(true);
@@ -519,18 +548,24 @@ public class BlackJack extends Game{
         gameOptionsSplit.setRightComponent(dealerBettingSplit);
         gameOptionsSplit.setLeftComponent(userDealerSplit);
 
-        dealerBettingSplit.setDividerLocation(250);
+        dealerBettingSplit.setDividerLocation(400);
         dealerBettingSplit.setTopComponent(betting);
         dealerBettingSplit.setBottomComponent(options);
 
         userDealerSplit.setDividerLocation(400);
-        userDealerSplit.setTopComponent(dealerHand);
+        userDealerSplit.setTopComponent(dealerHandPanel);
 
 
         userDealerSplit.setBottomComponent(userHandSplit);
+
+        userHandSplit.setDividerLocation(1440-2*(1440/3));
         userHandSplit.setLeftComponent(userHand1);
-        userDealerSplit.setRightComponent(userHand2);
+        userHandSplit.setRightComponent(userHand2);
         //endregion
+
+
+        userHand1.add(new JLabel("Hand 1"));
+        userHand2.add(new JLabel("Hand 2"));
 
         //region betting screen
         JLabel betHereTB = new JLabel("Place your Bet To Begin");
@@ -550,6 +585,16 @@ public class BlackJack extends Game{
                 money -= bet;
                 confirmBet.setVisible(false);
                 betHereTB.setText("Your Current Bet is: " + bet);
+
+                startPlaying(true);
+
+                for (Card card : userHand) {
+                    userHand1.add(new JLabel((Icon) card.getCardImage()));
+                }
+
+                startPlaying(false);
+                dealerHandPanel.add(new JLabel((Icon) dealerHand.getFirst().getCardImage()));
+                dealerHandPanel.add(new JLabel((Icon) dealerHand.getFirst().getCardBack()));
             } catch (NumberFormatException ex){
                 betHereTB.setText("ERROR INCORRECT INPUT");
                 confirmBet.setVisible(true);
@@ -599,43 +644,84 @@ public class BlackJack extends Game{
         betting.add(moneyLabel, constraints);
         //endregion
 
-
         //region options buttons
-        options.setLayout(new BoxLayout(options, BoxLayout.Y_AXIS));
+
 
         JButton hit = new JButton("Hit");
         hit.setVisible(true);
-        hit.addActionListener(e -> {
-            userHit(currentHand);
-        });
 
         JButton stand = new JButton("Stand");
         stand.setVisible(true);
+
+        JButton doubleButton = new JButton("double");
+        doubleButton.setVisible(true);
+
+        JButton splitHand = new JButton("Split hand");
+        splitHand.setVisible(true);
+
+        hit.addActionListener(e -> {
+            Image cardImage = userHitUI(currentHand);
+            if (userHand == currentHand){
+                userHand1.add(new JLabel((Icon) cardImage));
+            }else {
+                userHand2.add(new JLabel((Icon) cardImage));
+            }
+            doubleButton.setVisible(false);
+            splitHand.setVisible(false);
+        });
+
+
         stand.addActionListener(e -> {
             stand(currentHand);
+
             if(!currentHand.handSplit){
+                userHand1.removeAll();
+                userHand2.removeAll();
+
+                userHand1.add(new JLabel("Hand 1"));
+                userHand2.add(new JLabel("Hand 2"));
+
                 confirmBet.setVisible(true);
             }
         });
 
-        JButton doubleButton = new JButton("double");
-        doubleButton.setVisible(true);
+
         doubleButton.addActionListener(e -> {
-            userDouble();
+            money -= bet;
+            bet += bet;
+
+            userHand1.add(new JLabel( (Icon) userHitUI(userHand)));
+
+            switch (bustOrBJ(userHand, true)){
+                case BLACKJACK -> bet *= bettingPower;
+                case BUST ->
+            }
         });
 
-        JButton splitHand = new JButton("Split hand");
-        splitHand.setVisible(true);
+
         splitHand.addActionListener( e -> {
-            userSplitHand();
+            userSplitHandUI();
         });
 
 
-        options.setLayout(new BoxLayout(options, BoxLayout.Y_AXIS));
-        options.add(hit);
-        options.add(stand);
-        options.add(doubleButton);
-        options.add(splitHand);
+        options.setLayout(new GridBagLayout());
+
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.ipady = 20;
+        constraints.weightx = 0.0;
+        constraints.gridwidth = 3;
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        options.add(hit, constraints);
+
+        constraints.gridy = 1;
+        options.add(stand, constraints);
+
+        constraints.gridy = 2;
+        options.add(doubleButton, constraints);
+
+        constraints.gridy = 3;
+        options.add(splitHand,constraints);
         //endregion
 
     }

@@ -151,12 +151,6 @@ public class Main {
 
         boolean playing = true;
 
-        frame.setContentPane(blackJack);
-
-        frame.getContentPane().repaint();
-        frame.getContentPane().revalidate();
-        System.out.println();
-
         while(playing){
 
             blackJack.startPlaying(true);
