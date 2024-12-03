@@ -5,13 +5,13 @@ import java.awt.*;
 
 public class Popup extends JFrame {
 
-    JLabel winOrLose = new JLabel();
+    JLabel winOrLoseText = new JLabel();
 
     JLabel winCondition = new JLabel();
 
-    JButton confirm = new JButton("confirm");
+    public static JButton confirm = new JButton("confirm");
 
-    public Popup(boolean bustOrBlackJack){
+    public Popup(boolean winOrLose){
 
         JPanel holder = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -20,10 +20,10 @@ public class Popup extends JFrame {
         holder.setPreferredSize(new Dimension(500, 500));
 
         // Bust is false
-        if (bustOrBlackJack){
-            winOrLose.setText("You Win");
+        if (winOrLose){
+            this.winOrLoseText.setText("You Win");
         }else {
-            winOrLose.setText("You Lose");
+            this.winOrLoseText.setText("You Lose");
         }
 
         constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -32,7 +32,7 @@ public class Popup extends JFrame {
         constraints.gridwidth = 3;
         constraints.gridx = 0;
         constraints.gridy = 0;
-        holder.add(winOrLose, constraints);
+        holder.add(this.winOrLoseText, constraints);
 
         constraints.gridy = 1;
         holder.add(winCondition, constraints);
@@ -40,9 +40,17 @@ public class Popup extends JFrame {
         constraints.gridy = 2;
         holder.add(confirm, constraints);
 
+        this.setVisible(true);
+        holder.setVisible(true);
+        winOrLoseText.setVisible(true);
+        winCondition.setVisible(true);
+
+        this.add(holder);
     }
 
     public void setWinCondition(String winConditionText){
         winCondition.setText(winConditionText);
+        this.revalidate();
+        this.repaint();
     }
 }
