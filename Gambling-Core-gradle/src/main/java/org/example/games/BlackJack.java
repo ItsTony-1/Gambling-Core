@@ -28,6 +28,7 @@ public class BlackJack extends Game{
     static JButton stand = new JButton("Stand");
     static JButton doubleButton = new JButton("double");
     static JButton splitHand = new JButton("Split hand");
+    static JLabel moneyLabel = new JLabel("$" + money);
     static JButton confirmBet = new JButton("Confirm Bet");
 
     public static Hand userHand = new Hand(false, "Main Hand");
@@ -58,6 +59,10 @@ public class BlackJack extends Game{
             userHand.add(drawnCard2);
 
             loopThroughHand(userHand);
+
+            if (parseCard(drawnCard) == parseCard(drawnCard2)){
+                userHand.hasDuplicate = true;
+            }
         }else {
             dealerHand.add(drawnCard);
             dealerHand.add(drawnCard2);
@@ -591,19 +596,16 @@ public class BlackJack extends Game{
 
     private void setUpBettingScreen() {
         JLabel betHereTB = new JLabel("Place your Bet To Begin");
-        betHereTB.setVisible(true);
-
         JLabel minBet = new JLabel("Minimum bet is $5");
-        minBet.setVisible(true);
-
         JTextField betBox = new JTextField();
+
+        betHereTB.setVisible(true);
+        minBet.setVisible(true);
         betBox.setVisible(true);
-
         confirmBet.setVisible(true);
-
-        JLabel moneyLabel = new JLabel("$" + money);
         moneyLabel.setVisible(true);
 
+        //region setConstraints
         betting.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
@@ -642,14 +644,18 @@ public class BlackJack extends Game{
         constraints.gridx = 0;
         constraints.gridy = 3;
         betting.add(moneyLabel, constraints);
+        //endregion
 
         confirmBet.addActionListener(e -> {
             try{
                 bet = Integer.parseInt(betBox.getText());
+                if (bet > money){
+                    Integer.parseInt("ERROR");
+                }
                 money -= bet;
+                moneyLabel.setText("$" + money);
                 confirmBet.setVisible(false);
                 betHereTB.setText("Your Current Bet is: " + bet);
-
                 startPlaying(true);
 
                 for (Card card : userHand) {
@@ -661,20 +667,20 @@ public class BlackJack extends Game{
                 dealerHandPanel.add(new JLabel(new ImageIcon (dealerHand.getFirst().getCardBack())));
 
                 userHand1.repaint();
-                userHand1.revalidate();
-
                 dealerHandPanel.repaint();
-                dealerHandPanel.revalidate();
+
+                hit.setVisible(true);
+                stand.setVisible(true);
+                doubleButton.setVisible(true);
+                if (userHand.hasDuplicate) {
+                    splitHand.setVisible(true);
+                }
+                repaintRevalidate();
 
             } catch (NumberFormatException ex){
                 betHereTB.setText("ERROR INCORRECT INPUT");
                 confirmBet.setVisible(true);
             }
-
-            hit.setVisible(true);
-            stand.setVisible(true);
-            doubleButton.setVisible(true);
-            splitHand.setVisible(true);
         });
     }
 
@@ -713,6 +719,9 @@ public class BlackJack extends Game{
 
                     hit.setVisible(false);
                     stand.setVisible(false);
+                    doubleButton.setVisible(false);
+                    splitHand.setVisible(false);
+                    repaintRevalidate();
 
                     bet *= bettingPower;
                 }
@@ -750,6 +759,7 @@ public class BlackJack extends Game{
 
         doubleButton.addActionListener(e -> {
             money -= bet;
+            moneyLabel.setText("$" + money);
             bet += bet;
 
             userHand1.add(new JLabel(new ImageIcon(userHitUI(userHand))));
@@ -772,14 +782,8 @@ public class BlackJack extends Game{
                         winBlackJack.dispatchEvent(new WindowEvent(winBlackJack,
                                 WindowEvent.WINDOW_CLOSING));
                     });
-
-                    hit.setVisible(false);
-                    stand.setVisible(false);
-                    doubleButton.setVisible(false);
-
-                    repaintRevalidate();
-
                     money = bet * bettingPower;
+                    moneyLabel.setText("$" + money);
                     bet = 0;
                 }
                 case BUST -> {
@@ -799,12 +803,17 @@ public class BlackJack extends Game{
 
                         loseBusted.dispatchEvent(new WindowEvent(loseBusted, WindowEvent.WINDOW_CLOSING));
                     });
-                    hit.setVisible(false);
-                    stand.setVisible(false);
+                }
+                case IGNORE -> {
+                    standUI();
+                    return;
                 }
             }
-
-            standUI();
+            hit.setVisible(false);
+            stand.setVisible(false);
+            doubleButton.setVisible(false);
+            splitHand.setVisible(false);
+            repaintRevalidate();
         });
 
         splitHand.addActionListener( e -> {
@@ -813,20 +822,29 @@ public class BlackJack extends Game{
             Card newCard2 = drawCards();
 
             userHand.handSplit = true;
-
             userSplitHand.add(userHand.remove(1));
-
             userHand.add(newCard1);
             userSplitHand.add(newCard2);
 
             userHand.total = 0;
             userSplitHand.total = 0;
-
             loopThroughHand(userHand);
             loopThroughHand(userSplitHand);
+
+            userHand1.removeAll();
+            userHand2.removeAll();
+            repaintRevalidate();
+
+            for(Card card : userHand) {
+                userHand1.add(new JLabel(new ImageIcon(card.getCardImage())));
+            }
+            for (Card card : userSplitHand){
+                userHand2.add(new JLabel(new ImageIcon(card.getCardImage())));
+            }
+
         });
 
-        //region options buttons Pt 2
+        //region setConstraints2
         options.setLayout(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
@@ -846,11 +864,13 @@ public class BlackJack extends Game{
 
         constraints.gridy = 3;
         options.add(splitHand,constraints);
+        //endregion
 
         hit.setVisible(false);
         stand.setVisible(false);
         doubleButton.setVisible(false);
         splitHand.setVisible(false);
+        repaintRevalidate();
     }
 
     private void standUI() {
@@ -859,8 +879,11 @@ public class BlackJack extends Game{
             return;
         }
 
-        stand.setVisible(false);
         hit.setVisible(false);
+        stand.setVisible(false);
+        doubleButton.setVisible(false);
+        splitHand.setVisible(false);
+        repaintRevalidate();
 
         dealerHandPanel.removeAll();
         dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardImage())));
@@ -880,6 +903,8 @@ public class BlackJack extends Game{
         switch (bustOrBJ(dealerHand)){
             case MatchEnd.BUST -> {
                 money += bet * bettingPower;
+                moneyLabel.setText("$" + money);
+                repaintRevalidate();
 
                 Popup winBusted = new Popup(true);
                 winBusted.setWinCondition("Dealer went over 21");
@@ -895,9 +920,6 @@ public class BlackJack extends Game{
 
                     winBusted.dispatchEvent(new WindowEvent(winBusted, WindowEvent.WINDOW_CLOSING));
                 });
-
-                hit.setVisible(false);
-                stand.setVisible(false);
                 return;
             }
             case MatchEnd.BLACKJACK -> {
@@ -919,17 +941,17 @@ public class BlackJack extends Game{
                     dealerWinBlackJack.dispatchEvent(new WindowEvent(dealerWinBlackJack,
                             WindowEvent.WINDOW_CLOSING));
                 });
-                hit.setVisible(false);
-                stand.setVisible(false);
                 return;
             }
         }
 
         int countOfUserHand = 2;
         for (int setCurrentHand = 0; setCurrentHand < countOfUserHand; setCurrentHand++) {
-            switch (setCurrentHand){
-                case 0 -> currentHand = userHand;
-                case 1 -> currentHand = userSplitHand;
+            if (!userHand.handSplit) {
+                switch (setCurrentHand) {
+                    case 0 -> currentHand = userHand;
+                    case 1 -> currentHand = userSplitHand;
+                }
             }
 
             if (!currentHand.isEmpty()) {
@@ -937,7 +959,7 @@ public class BlackJack extends Game{
 
                     Popup dealerWinLargerTotal = new Popup(false);
                     dealerWinLargerTotal.setWinCondition("The dealer got a total of " + dealerHand.total +
-                            ". That is larger than your " + currentHand + ".");
+                            ". That is larger than your " + currentHand.total + ".");
                     dealerWinLargerTotal.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {
@@ -953,14 +975,14 @@ public class BlackJack extends Game{
                         dealerWinLargerTotal.dispatchEvent(new WindowEvent(dealerWinLargerTotal,
                                 WindowEvent.WINDOW_CLOSING));
                     });
-                    hit.setVisible(false);
-                    stand.setVisible(false);
                 }else {
                     money += bet * bettingPower;
+                    moneyLabel.setText("$" + money);
+                    repaintRevalidate();
 
                     Popup userWinLargerTotal = new Popup(true);
                     userWinLargerTotal.setWinCondition("The dealer got a total of " + dealerHand.total +
-                            ". That is smaller than your " + currentHand + ".");
+                            ". That is smaller than your " + currentHand.total + ".");
                     userWinLargerTotal.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {

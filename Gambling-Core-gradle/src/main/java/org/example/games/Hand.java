@@ -8,6 +8,7 @@ public class Hand extends ArrayList <Card> {
 
     int total;
     boolean hasAce;
+    boolean hasDuplicate;
     boolean handSplit;
     String handName;
 
@@ -15,6 +16,7 @@ public class Hand extends ArrayList <Card> {
         this.handSplit = handSplit;
         this.total = 0;
         this.hasAce = false;
+        this.hasDuplicate = false;
         this.handName = handName;
     }
 }
