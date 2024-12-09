@@ -16,8 +16,7 @@ public class Popup extends JFrame {
         JPanel holder = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
-        this.setPreferredSize(new Dimension(500, 500));
-        holder.setPreferredSize(new Dimension(500, 500));
+
 
         // Bust is false
         if (winOrLose){
@@ -46,6 +45,11 @@ public class Popup extends JFrame {
         winCondition.setVisible(true);
 
         this.add(holder);
+
+        this.setSize(new Dimension(800, 800));
+
+        this.setPreferredSize(new Dimension(800, 800));
+        holder.setPreferredSize(new Dimension(800, 800));
     }
 
     public void setWinCondition(String winConditionText){
