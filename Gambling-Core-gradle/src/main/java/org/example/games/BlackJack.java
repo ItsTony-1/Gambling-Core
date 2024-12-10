@@ -524,6 +524,7 @@ public class BlackJack extends Game{
 
     /**
      * Creates the GUI of the BlackJack table
+     * Calls: {@link BlackJack#setUpBettingScreen()} {@link BlackJack#setUpOptionsMenu()}
      */
     public void createBlackjackScreen(){
 
@@ -579,6 +580,9 @@ public class BlackJack extends Game{
 
     }
 
+    /**
+     * refreshes the window
+     */
     private void repaintRevalidate() {
         options.repaint();
         options.revalidate();
@@ -594,6 +598,11 @@ public class BlackJack extends Game{
         this.revalidate();
     }
 
+    /**
+     * sets up the betting screen <p>
+     * Calls: {@link BlackJack#cleanHands()} {@link BlackJack#startPlaying(boolean)}
+     * {@link BlackJack#repaintRevalidate()}
+     */
     private void setUpBettingScreen() {
         JLabel betHereTB = new JLabel("Place your Bet To Begin");
         JLabel minBet = new JLabel("Minimum bet is $5");
@@ -645,6 +654,8 @@ public class BlackJack extends Game{
         constraints.gridy = 3;
         betting.add(moneyLabel, constraints);
         //endregion
+        
+        int totalCards = Integer.parseInt(deck.remaining);
 
         confirmBet.addActionListener(e -> {
             try{
@@ -660,6 +671,12 @@ public class BlackJack extends Game{
 
                 for (Card card : userHand) {
                     userHand1.add(new JLabel(new ImageIcon(card.getCardImage())));
+                }
+
+                if (Integer.parseInt(deck.remaining) < totalCards/3){
+                    shuffleDeck();
+                    shuffleCount++;
+                    System.out.println(shuffleCount);
                 }
 
                 startPlaying(false);
@@ -708,6 +725,12 @@ public class BlackJack extends Game{
         });
     }
 
+    /**
+     * sets up the buttons used to play the game <p>
+     * Calls: {@link BlackJack#repaintRevalidate()} {@link BlackJack#userHitUI(Hand)}
+     * {@link BlackJack#cleanHands()} {@link BlackJack#standUI()} {@link BlackJack#loopThroughHand(Hand)}
+     * {@link Popup#setWinCondition(String)}
+     */
     private void setUpOptionsMenu() {
         hit.addActionListener(e -> {
             Image cardImage = userHitUI(currentHand);
@@ -901,6 +924,9 @@ public class BlackJack extends Game{
         repaintRevalidate();
     }
 
+    /**
+     * Ends a hand
+     */
     private void standUI() {
         if (currentHand.handSplit){
             currentHand = userSplitHand;

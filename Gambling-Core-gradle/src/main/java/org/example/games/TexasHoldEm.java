@@ -5,8 +5,7 @@ import javax.swing.*;
 public class TexasHoldEm extends Game{
 
     public TexasHoldEm(){
-        JLabel temp = new JLabel("Texas Hold Em");
-        this.add(temp);
+        this.add(new JLabel("Texas Hold Em"));
     }
 
 
