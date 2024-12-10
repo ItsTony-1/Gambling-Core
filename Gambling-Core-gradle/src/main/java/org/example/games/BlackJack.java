@@ -32,9 +32,8 @@ public class BlackJack extends Game{
     static JButton confirmBet = new JButton("Confirm Bet");
 
     public static Hand userHand = new Hand(false, "Main Hand");
-    public static Hand userSplitHand = new Hand(true, "Secondary Hand");
+    public static Hand userSplitHand = new Hand(false, "Secondary Hand");
     public static Hand dealerHand = new Hand(false, "Dealer Hand");
-
 
     public static Hand currentHand = userHand;
 
@@ -674,6 +673,9 @@ public class BlackJack extends Game{
                 startPlaying(false);
 
                 if (userHand.total == 21){
+                    
+                    dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardImage())));
+                    dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getLast().getCardImage())));
                     repaintRevalidate();
 
                     Popup winBlackJack = new Popup(true, false,
@@ -698,8 +700,33 @@ public class BlackJack extends Game{
                     return;
                 }
 
-                dealerHandPanel.add(new JLabel(new ImageIcon (dealerHand.getFirst().getCardImage())));
-                dealerHandPanel.add(new JLabel(new ImageIcon (dealerHand.getFirst().getCardBack())));
+                if (dealerHand.total == 21){
+                    repaintRevalidate();
+
+                    Popup dealerWinBlackJack = new Popup(false, false,
+                            "The dealer got a total of 21. That's a Black Jack!");
+                    dealerWinBlackJack.confirm.addActionListener(ee -> {
+
+                        cleanHands();
+                        userHand1.removeAll();
+                        userHand2.removeAll();
+                        dealerHandPanel.removeAll();
+                        confirmBet.setVisible(true);
+
+                        repaintRevalidate();
+
+                        dealerWinBlackJack.dispatchEvent(new WindowEvent(dealerWinBlackJack,
+                                WindowEvent.WINDOW_CLOSING));
+                    });
+
+                    bet = 0;
+                    return;
+                }else {
+                    dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardImage())));
+                    dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardBack())));
+                }
+
+
 
                 hit.setVisible(true);
                 stand.setVisible(true);
@@ -723,6 +750,8 @@ public class BlackJack extends Game{
      * {@link BlackJack#cleanHands()} {@link BlackJack#standUI()} {@link BlackJack#loopThroughHand(Hand)}
      */
     private void setUpOptionsMenu() {
+        currentHand = userHand;
+
         hit.addActionListener(e -> {
             Image cardImage = userHitUI(currentHand);
             if (userHand == currentHand){
