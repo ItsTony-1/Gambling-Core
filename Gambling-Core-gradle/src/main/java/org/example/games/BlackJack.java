@@ -372,14 +372,6 @@ public class BlackJack extends Game{
         System.out.println("You drew a " + drawnCard.value + " of " + drawnCard.suit);
     }
 
-    private static Image userHitUI(Hand hand) {
-        Card drawnCard = drawCards();
-        hand.add(drawnCard);
-        hand.total += parseCard(drawnCard);
-
-        return drawnCard.getCardImage();
-    }
-
     /**
      * Doubles bet, draws a card then checks for win
      * <p> Calls: {@link BlackJack#bustOrBJ(Hand, boolean)} {@link BlackJack#userHit(Hand)}
@@ -654,7 +646,7 @@ public class BlackJack extends Game{
         constraints.gridy = 3;
         betting.add(moneyLabel, constraints);
         //endregion
-        
+
         int totalCards = Integer.parseInt(deck.remaining);
 
         confirmBet.addActionListener(e -> {
@@ -684,8 +676,8 @@ public class BlackJack extends Game{
                 if (userHand.total == 21){
                     repaintRevalidate();
 
-                    Popup winBlackJack = new Popup(true, false);
-                    winBlackJack.setWinCondition("You got a total of 21! That's a Black Jack!");
+                    Popup winBlackJack = new Popup(true, false,
+                            "You got a total of 21! That's a Black Jack!");
                     winBlackJack.confirm.addActionListener( ee -> {
 
                         cleanHands();
@@ -729,7 +721,6 @@ public class BlackJack extends Game{
      * sets up the buttons used to play the game <p>
      * Calls: {@link BlackJack#repaintRevalidate()} {@link BlackJack#userHitUI(Hand)}
      * {@link BlackJack#cleanHands()} {@link BlackJack#standUI()} {@link BlackJack#loopThroughHand(Hand)}
-     * {@link Popup#setWinCondition(String)}
      */
     private void setUpOptionsMenu() {
         hit.addActionListener(e -> {
@@ -744,8 +735,8 @@ public class BlackJack extends Game{
 
             switch (bustOrBJ(userHand)) {
                 case BLACKJACK -> {
-                    Popup winBlackJack = new Popup(true, false);
-                    winBlackJack.setWinCondition("You got a total of 21! That's a Black Jack!");
+                    Popup winBlackJack = new Popup(true, false,
+                            "You got a total of 21! That's a Black Jack!");
                     winBlackJack.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {
@@ -773,8 +764,8 @@ public class BlackJack extends Game{
                     bet *= bettingPower;
                 }
                 case BUST -> {
-                    Popup loseBusted = new Popup(false, false);
-                    loseBusted.setWinCondition("You went over 21, you lost");
+                    Popup loseBusted = new Popup(false, false,
+                            "You went over 21, you lost");
                     loseBusted.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {
@@ -816,8 +807,8 @@ public class BlackJack extends Game{
 
             switch (bustOrBJ(userHand)){
                 case BLACKJACK -> {
-                    Popup winBlackJack = new Popup(true, false);
-                    winBlackJack.setWinCondition("You got a total of 21! That's a Black Jack!");
+                    Popup winBlackJack = new Popup(true, false,
+                            "You got a total of 21! That's a Black Jack!");
                     winBlackJack.confirm.addActionListener( ee -> {
 
                         cleanHands();
@@ -836,8 +827,8 @@ public class BlackJack extends Game{
                     bet = 0;
                 }
                 case BUST -> {
-                    Popup loseBusted = new Popup(false, false);
-                    loseBusted.setWinCondition("You went over 21, you lost");
+                    Popup loseBusted = new Popup(false, false,
+                            "You went over 21, you lost");
                     loseBusted.confirm.addActionListener( ee -> {
 
                         if (!currentHand.handSplit) {
@@ -925,7 +916,20 @@ public class BlackJack extends Game{
     }
 
     /**
-     * Ends a hand
+     * preforms what {@link BlackJack#userHit(Hand)} does but applies it to UI as well
+     * @param hand hand to add card to
+     * @return the drawn Card's image
+     */
+    private static Image userHitUI(Hand hand) {
+        Card drawnCard = drawCards();
+        hand.add(drawnCard);
+        hand.total += parseCard(drawnCard);
+
+        return drawnCard.getCardImage();
+    }
+
+    /**
+     * does what {@link BlackJack#stand(Hand)} does but applies it to UI as well
      */
     private void standUI() {
         if (currentHand.handSplit){
@@ -960,8 +964,7 @@ public class BlackJack extends Game{
                 moneyLabel.setText("$" + money);
                 repaintRevalidate();
 
-                Popup winBusted = new Popup(true, false);
-                winBusted.setWinCondition("Dealer went over 21");
+                Popup winBusted = new Popup(true, false, "Dealer went over 21");
                 winBusted.confirm.addActionListener( ee -> {
 
                     cleanHands();
@@ -977,9 +980,8 @@ public class BlackJack extends Game{
                 return;
             }
             case MatchEnd.BLACKJACK -> {
-                Popup dealerWinBlackJack = new Popup(false, false);
-                dealerWinBlackJack.setWinCondition("The dealer got a total of 21." +
-                        " That's a Black Jack!");
+                Popup dealerWinBlackJack = new Popup(false, false,
+                        "The dealer got a total of 21. That's a Black Jack!");
                 dealerWinBlackJack.confirm.addActionListener(ee -> {
 
                     cleanHands();
@@ -1009,9 +1011,9 @@ public class BlackJack extends Game{
             if (!currentHand.isEmpty()) {
                 if (dealerHand.total > currentHand.total) {
 
-                    Popup dealerWinLargerTotal = new Popup(false, false);
-                    dealerWinLargerTotal.setWinCondition("The dealer got a total of " + dealerHand.total +
-                            ". That is larger than your " + currentHand.total + ".");
+                    Popup dealerWinLargerTotal = new Popup(false, false,
+                            "The dealer got a total of " + dealerHand.total +
+                                    ". That is larger than your " + currentHand.total + ".");
                     dealerWinLargerTotal.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {
@@ -1031,9 +1033,9 @@ public class BlackJack extends Game{
                     moneyLabel.setText("$" + money);
                     repaintRevalidate();
 
-                    Popup dealerWinLargerTotal = new Popup(false, true);
-                    dealerWinLargerTotal.setWinCondition("The dealer got a total of " + dealerHand.total +
-                            ". That is the same as your " + currentHand.total + ".");
+                    Popup dealerWinLargerTotal = new Popup(false, true,
+                            "The dealer got a total of " + dealerHand.total +
+                                    ". That is the same as your " + currentHand.total + ".");
                     dealerWinLargerTotal.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {
@@ -1056,9 +1058,9 @@ public class BlackJack extends Game{
                     moneyLabel.setText("$" + money);
                     repaintRevalidate();
 
-                    Popup userWinLargerTotal = new Popup(true, false);
-                    userWinLargerTotal.setWinCondition("The dealer got a total of " + dealerHand.total +
-                            ". That is smaller than your " + currentHand.total + ".");
+                    Popup userWinLargerTotal = new Popup(true, false,
+                            "The dealer got a total of " + dealerHand.total +
+                                    ". That is smaller than your " + currentHand.total + ".");
                     userWinLargerTotal.confirm.addActionListener(ee -> {
 
                         if (!currentHand.handSplit) {

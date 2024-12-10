@@ -11,7 +11,7 @@ public class Popup extends JFrame {
 
     public static JButton confirm = new JButton("confirm");
 
-    public Popup(boolean winOrLose, boolean isPush){
+    public Popup(boolean winOrLose, boolean isPush, String winConditionText){
 
         JPanel holder = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
@@ -24,6 +24,8 @@ public class Popup extends JFrame {
         } else {
             this.winOrLoseText.setText("You Lose");
         }
+
+        winCondition.setText(winConditionText);
 
         constraints.fill = GridBagConstraints.HORIZONTAL;
         constraints.ipady = 20;
@@ -50,11 +52,5 @@ public class Popup extends JFrame {
 
         this.setPreferredSize(new Dimension(800, 800));
         holder.setPreferredSize(new Dimension(800, 800));
-    }
-
-    public void setWinCondition(String winConditionText){
-        winCondition.setText(winConditionText);
-        this.revalidate();
-        this.repaint();
     }
 }

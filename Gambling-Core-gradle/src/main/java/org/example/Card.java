@@ -35,6 +35,10 @@ public class Card {
         }
     }
 
+    /**
+     * Generates the back of the card
+     * @return image of the back of the card
+     */
     public Image getCardBack(){
         try {
             URL url = new URI("https://deckofcardsapi.com/static/img/back.png").toURL();
