@@ -11,17 +11,17 @@ public class Popup extends JFrame {
 
     public static JButton confirm = new JButton("confirm");
 
-    public Popup(boolean winOrLose){
+    public Popup(boolean winOrLose, boolean isPush){
 
         JPanel holder = new JPanel(new GridBagLayout());
         GridBagConstraints constraints = new GridBagConstraints();
 
-
-
         // Bust is false
         if (winOrLose){
             this.winOrLoseText.setText("You Win");
-        }else {
+        } else if (isPush) {
+            this.winOrLoseText.setText("Push");
+        } else {
             this.winOrLoseText.setText("You Lose");
         }
 
