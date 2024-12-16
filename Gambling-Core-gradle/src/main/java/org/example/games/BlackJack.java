@@ -780,8 +780,7 @@ public class BlackJack extends Game{
                     });
 
                     refreshMoneyLabel(true,false);
-                    hit.setVisible(false);
-                    stand.setVisible(false);
+                    hideUI(true,false);
                 }
                 case BUST -> {
                     if (userHand.handSplit){
@@ -804,14 +803,11 @@ public class BlackJack extends Game{
 
                         loseBusted.dispatchEvent(new WindowEvent(loseBusted, WindowEvent.WINDOW_CLOSING));
 
-                        hit.setVisible(false);
-                        stand.setVisible(false);
+                        hideUI(true,false);
                     });
                 }
             }
-            doubleButton.setVisible(false);
-            splitHand.setVisible(false);
-            repaintRevalidate();
+            hideUI(false,true);
         });
 
         stand.addActionListener(e -> {
@@ -858,11 +854,7 @@ public class BlackJack extends Game{
                     return;
                 }
             }
-            hit.setVisible(false);
-            stand.setVisible(false);
-            doubleButton.setVisible(false);
-            splitHand.setVisible(false);
-            repaintRevalidate();
+            hideUI(true,false);
         });
 
         splitHand.addActionListener( e -> {
@@ -895,8 +887,7 @@ public class BlackJack extends Game{
                 userHand2.add(new JLabel(new ImageIcon(card.getCardImage())));
             }
 
-            splitHand.setVisible(false);
-            doubleButton.setVisible(false);
+            hideUI(false,true);
         });
 
         //region setConstraints2
@@ -921,11 +912,7 @@ public class BlackJack extends Game{
         options.add(splitHand,constraints);
         //endregion
 
-        hit.setVisible(false);
-        stand.setVisible(false);
-        doubleButton.setVisible(false);
-        splitHand.setVisible(false);
-        repaintRevalidate();
+        hideUI(true,false);
     }
 
     /**
@@ -950,11 +937,7 @@ public class BlackJack extends Game{
             return;
         }
 
-        hit.setVisible(false);
-        stand.setVisible(false);
-        doubleButton.setVisible(false);
-        splitHand.setVisible(false);
-        repaintRevalidate();
+        hideUI(true,false);
 
         dealerHandPanel.removeAll();
         dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardImage())));
@@ -1118,6 +1101,19 @@ public class BlackJack extends Game{
         }
 
         moneyLabel.setText("$" + money);
+        repaintRevalidate();
+    }
+
+    private void hideUI(boolean allUI, boolean firstHit){
+        if (allUI){
+            hit.setVisible(false);
+            stand.setVisible(false);
+            doubleButton.setVisible(false);
+            splitHand.setVisible(false);
+        } else if (firstHit) {
+            doubleButton.setVisible(false);
+            splitHand.setVisible(false);
+        }
         repaintRevalidate();
     }
 }
