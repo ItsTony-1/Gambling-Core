@@ -35,6 +35,11 @@ public class BlackJack extends Game{
     public static Hand userSplitHand = new Hand(false, "Secondary Hand");
     public static Hand dealerHand = new Hand(false, "Dealer Hand");
 
+    static JSplitPane userDealerSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+    static JSplitPane dealerBettingSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+    static JSplitPane userHandSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    static JSplitPane gameOptionsSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+
     public static Hand currentHand = userHand;
 
     public BlackJack(){
@@ -511,6 +516,10 @@ public class BlackJack extends Game{
             dealerHand.subList(0, dealerHand.size()).clear();
             dealerHand.total = 0;
         }
+
+        userHand1.removeAll();
+        userHand2.removeAll();
+        dealerHandPanel.removeAll();
     }
 
     /**
@@ -534,11 +543,6 @@ public class BlackJack extends Game{
         //endregion
 
         //region Split pane set up
-        JSplitPane userDealerSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        JSplitPane dealerBettingSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        JSplitPane userHandSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        JSplitPane gameOptionsSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-
         userDealerSplit.setVisible(true);
         dealerBettingSplit.setVisible(true);
         userHandSplit.setVisible(true);
@@ -561,7 +565,7 @@ public class BlackJack extends Game{
 
         userDealerSplit.setBottomComponent(userHandSplit);
 
-        userHandSplit.setDividerLocation(1440-2*(1440/3));
+        userHandSplit.setDividerLocation(1440-(1440/3));
         userHandSplit.setLeftComponent(userHand1);
         userHandSplit.setRightComponent(userHand2);
         //endregion
@@ -652,7 +656,7 @@ public class BlackJack extends Game{
             try{
                 bet = Integer.parseInt(betBox.getText());
                 if (bet > money){
-                    Integer.parseInt("ERROR");
+                    Integer.parseInt("ERROR MONEY");
                 }
                 money -= bet;
                 moneyLabel.setText("$" + money);
@@ -683,9 +687,6 @@ public class BlackJack extends Game{
                     winBlackJack.confirm.addActionListener( ee -> {
 
                         cleanHands();
-                        userHand1.removeAll();
-                        userHand2.removeAll();
-                        dealerHandPanel.removeAll();
                         confirmBet.setVisible(true);
 
                         repaintRevalidate();
@@ -694,7 +695,7 @@ public class BlackJack extends Game{
                                 WindowEvent.WINDOW_CLOSING));
                     });
 
-                    money = bet * bettingPower;
+                    money += bet * bettingPower;
                     moneyLabel.setText("$" + money);
                     bet = 0;
                     return;
@@ -708,9 +709,6 @@ public class BlackJack extends Game{
                     dealerWinBlackJack.confirm.addActionListener(ee -> {
 
                         cleanHands();
-                        userHand1.removeAll();
-                        userHand2.removeAll();
-                        dealerHandPanel.removeAll();
                         confirmBet.setVisible(true);
 
                         repaintRevalidate();
@@ -725,8 +723,6 @@ public class BlackJack extends Game{
                     dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardImage())));
                     dealerHandPanel.add(new JLabel(new ImageIcon(dealerHand.getFirst().getCardBack())));
                 }
-
-
 
                 hit.setVisible(true);
                 stand.setVisible(true);
@@ -762,61 +758,59 @@ public class BlackJack extends Game{
                 repaintRevalidate();
             }
 
-            switch (bustOrBJ(userHand)) {
+
+            switch (bustOrBJ(currentHand)) {
                 case BLACKJACK -> {
+                    if (userHand.handSplit){
+                        if (currentHand != userSplitHand){
+                            currentHand = userSplitHand;
+                            return;
+                        }
+                        standUI();
+                        return;
+                    }
                     Popup winBlackJack = new Popup(true, false,
                             "You got a total of 21! That's a Black Jack!");
                     winBlackJack.confirm.addActionListener(ee -> {
 
-                        if (!currentHand.handSplit) {
-                            cleanHands();
-                            userHand1.removeAll();
-                            userHand2.removeAll();
-                            dealerHandPanel.removeAll();
-                            confirmBet.setVisible(true);
-
-                            repaintRevalidate();
-                        }else {
-                            currentHand = userSplitHand;
-                        }
+                        cleanHands();
+                        confirmBet.setVisible(true);
+                        repaintRevalidate();
 
                         winBlackJack.dispatchEvent(new WindowEvent(winBlackJack,
                                 WindowEvent.WINDOW_CLOSING));
                     });
 
+                    bet *= bettingPower;
                     hit.setVisible(false);
                     stand.setVisible(false);
-                    doubleButton.setVisible(false);
-                    splitHand.setVisible(false);
-                    repaintRevalidate();
-
-                    bet *= bettingPower;
                 }
                 case BUST -> {
+                    if (userHand.handSplit){
+                        if (currentHand != userSplitHand){
+                            currentHand = userSplitHand;
+                            return;
+                        }
+                        standUI();
+                        return;
+                    }
+
                     Popup loseBusted = new Popup(false, false,
                             "You went over 21, you lost");
                     loseBusted.confirm.addActionListener(ee -> {
 
-                        if (!currentHand.handSplit) {
-                            cleanHands();
-                            userHand1.removeAll();
-                            userHand2.removeAll();
-                            dealerHandPanel.removeAll();
-                            confirmBet.setVisible(true);
+                        cleanHands();
+                        confirmBet.setVisible(true);
 
-                            repaintRevalidate();
-                        }else {
-                            currentHand = userSplitHand;
-                        }
+                        repaintRevalidate();
 
                         loseBusted.dispatchEvent(new WindowEvent(loseBusted, WindowEvent.WINDOW_CLOSING));
+
+                        hit.setVisible(false);
+                        stand.setVisible(false);
                     });
-                    hit.setVisible(false);
-                    stand.setVisible(false);
-                    repaintRevalidate();
                 }
             }
-
             doubleButton.setVisible(false);
             splitHand.setVisible(false);
             repaintRevalidate();
@@ -841,17 +835,13 @@ public class BlackJack extends Game{
                     winBlackJack.confirm.addActionListener( ee -> {
 
                         cleanHands();
-                        userHand1.removeAll();
-                        userHand2.removeAll();
-                        dealerHandPanel.removeAll();
                         confirmBet.setVisible(true);
-
                         repaintRevalidate();
 
                         winBlackJack.dispatchEvent(new WindowEvent(winBlackJack,
                                 WindowEvent.WINDOW_CLOSING));
                     });
-                    money = bet * bettingPower;
+                    money += bet * bettingPower;
                     moneyLabel.setText("$" + money);
                     bet = 0;
                 }
@@ -860,17 +850,9 @@ public class BlackJack extends Game{
                             "You went over 21, you lost");
                     loseBusted.confirm.addActionListener( ee -> {
 
-                        if (!currentHand.handSplit) {
-                            cleanHands();
-                            userHand1.removeAll();
-                            userHand2.removeAll();
-                            dealerHandPanel.removeAll();
-                            confirmBet.setVisible(true);
-
-                            repaintRevalidate();
-                        }else {
-                            currentHand = userSplitHand;
-                        }
+                        cleanHands();
+                        confirmBet.setVisible(true);
+                        repaintRevalidate();
 
                         loseBusted.dispatchEvent(new WindowEvent(loseBusted, WindowEvent.WINDOW_CLOSING));
                     });
@@ -888,6 +870,11 @@ public class BlackJack extends Game{
         });
 
         splitHand.addActionListener( e -> {
+
+            userHandSplit.setDividerLocation(1440-2*(1440/3));
+
+            money -= bet;
+            moneyLabel.setText("$" + money);
 
             Card newCard1 = drawCards();
             Card newCard2 = drawCards();
@@ -913,6 +900,8 @@ public class BlackJack extends Game{
                 userHand2.add(new JLabel(new ImageIcon(card.getCardImage())));
             }
 
+            splitHand.setVisible(false);
+            doubleButton.setVisible(false);
         });
 
         //region setConstraints2
@@ -986,7 +975,6 @@ public class BlackJack extends Game{
             repaintRevalidate();
         }
 
-
         switch (bustOrBJ(dealerHand)){
             case MatchEnd.BUST -> {
                 money += bet * bettingPower;
@@ -997,11 +985,7 @@ public class BlackJack extends Game{
                 winBusted.confirm.addActionListener( ee -> {
 
                     cleanHands();
-                    userHand1.removeAll();
-                    userHand2.removeAll();
-                    dealerHandPanel.removeAll();
                     confirmBet.setVisible(true);
-
                     repaintRevalidate();
 
                     winBusted.dispatchEvent(new WindowEvent(winBusted, WindowEvent.WINDOW_CLOSING));
@@ -1014,11 +998,7 @@ public class BlackJack extends Game{
                 dealerWinBlackJack.confirm.addActionListener(ee -> {
 
                     cleanHands();
-                    userHand1.removeAll();
-                    userHand2.removeAll();
-                    dealerHandPanel.removeAll();
                     confirmBet.setVisible(true);
-
                     repaintRevalidate();
 
                     dealerWinBlackJack.dispatchEvent(new WindowEvent(dealerWinBlackJack,
@@ -1030,16 +1010,52 @@ public class BlackJack extends Game{
 
         int countOfUserHand = 2;
         for (int setCurrentHand = 0; setCurrentHand < countOfUserHand; setCurrentHand++) {
-            if (!userHand.handSplit) {
+
+            if (userHand.handSplit) {
                 switch (setCurrentHand) {
                     case 0 -> currentHand = userHand;
                     case 1 -> currentHand = userSplitHand;
+                }
+            }else {
+                if (setCurrentHand == 1){
+                    return;
+                }
+            }
+
+            switch (bustOrBJ(currentHand)) {
+                case BLACKJACK -> {
+                    Popup winBlackJack = new Popup(true, false,
+                            "You got a total of 21! That's a Black Jack!");
+                    winBlackJack.confirm.addActionListener(ee -> {
+
+                        cleanHands();
+                        confirmBet.setVisible(true);
+                        repaintRevalidate();
+
+                        winBlackJack.dispatchEvent(new WindowEvent(winBlackJack,
+                                WindowEvent.WINDOW_CLOSING));
+                    });
+
+                    bet *= bettingPower;
+                    continue;
+                }
+                case BUST -> {
+                    Popup loseBusted = new Popup(false, false,
+                            "You went over 21, you lost");
+                    loseBusted.confirm.addActionListener(ee -> {
+
+                        cleanHands();
+                        confirmBet.setVisible(true);
+                        repaintRevalidate();
+
+                        loseBusted.dispatchEvent(new WindowEvent(loseBusted, WindowEvent.WINDOW_CLOSING));
+                    });
+                    continue;
                 }
             }
 
             if (!currentHand.isEmpty()) {
                 if (dealerHand.total > currentHand.total) {
-
                     Popup dealerWinLargerTotal = new Popup(false, false,
                             "The dealer got a total of " + dealerHand.total +
                                     ". That is larger than your " + currentHand.total + ".");
@@ -1047,9 +1063,6 @@ public class BlackJack extends Game{
 
                         if (!currentHand.handSplit) {
                             cleanHands();
-                            userHand1.removeAll();
-                            userHand2.removeAll();
-                            dealerHandPanel.removeAll();
                             confirmBet.setVisible(true);
                             repaintRevalidate();
                         }
@@ -1069,11 +1082,7 @@ public class BlackJack extends Game{
 
                         if (!currentHand.handSplit) {
                             cleanHands();
-                            userHand1.removeAll();
-                            userHand2.removeAll();
-                            dealerHandPanel.removeAll();
                             confirmBet.setVisible(true);
-
                             repaintRevalidate();
                         }else {
                             currentHand = userSplitHand;
@@ -1094,11 +1103,7 @@ public class BlackJack extends Game{
 
                         if (!currentHand.handSplit) {
                             cleanHands();
-                            userHand1.removeAll();
-                            userHand2.removeAll();
-                            dealerHandPanel.removeAll();
                             confirmBet.setVisible(true);
-
                             repaintRevalidate();
                         }else {
                             currentHand = userSplitHand;
@@ -1110,5 +1115,7 @@ public class BlackJack extends Game{
                 }
             }
         }
+        currentHand = userHand;
+        userHand.handSplit = false;
     }
 }
