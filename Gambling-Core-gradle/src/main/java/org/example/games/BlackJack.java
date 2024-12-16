@@ -658,8 +658,7 @@ public class BlackJack extends Game{
                 if (bet > money){
                     Integer.parseInt("ERROR MONEY");
                 }
-                money -= bet;
-                moneyLabel.setText("$" + money);
+                refreshMoneyLabel(false,false);
                 confirmBet.setVisible(false);
                 betHereTB.setText("Your Current Bet is: " + bet);
                 startPlaying(true);
@@ -695,8 +694,7 @@ public class BlackJack extends Game{
                                 WindowEvent.WINDOW_CLOSING));
                     });
 
-                    money += bet * bettingPower;
-                    moneyLabel.setText("$" + money);
+                    refreshMoneyLabel(true,false);
                     bet = 0;
                     return;
                 }
@@ -781,7 +779,7 @@ public class BlackJack extends Game{
                                 WindowEvent.WINDOW_CLOSING));
                     });
 
-                    bet *= bettingPower;
+                    refreshMoneyLabel(true,false);
                     hit.setVisible(false);
                     stand.setVisible(false);
                 }
@@ -821,8 +819,7 @@ public class BlackJack extends Game{
         });
 
         doubleButton.addActionListener(e -> {
-            money -= bet;
-            moneyLabel.setText("$" + money);
+            refreshMoneyLabel(false,false);
             bet += bet;
 
             userHand1.add(new JLabel(new ImageIcon(userHitUI(userHand))));
@@ -841,8 +838,7 @@ public class BlackJack extends Game{
                         winBlackJack.dispatchEvent(new WindowEvent(winBlackJack,
                                 WindowEvent.WINDOW_CLOSING));
                     });
-                    money += bet * bettingPower;
-                    moneyLabel.setText("$" + money);
+                    refreshMoneyLabel(true,false);
                     bet = 0;
                 }
                 case BUST -> {
@@ -873,8 +869,7 @@ public class BlackJack extends Game{
 
             userHandSplit.setDividerLocation(1440-2*(1440/3));
 
-            money -= bet;
-            moneyLabel.setText("$" + money);
+            refreshMoneyLabel(false,false);
 
             Card newCard1 = drawCards();
             Card newCard2 = drawCards();
@@ -977,9 +972,7 @@ public class BlackJack extends Game{
 
         switch (bustOrBJ(dealerHand)){
             case MatchEnd.BUST -> {
-                money += bet * bettingPower;
-                moneyLabel.setText("$" + money);
-                repaintRevalidate();
+                refreshMoneyLabel(true,false);
 
                 Popup winBusted = new Popup(true, false, "Dealer went over 21");
                 winBusted.confirm.addActionListener( ee -> {
@@ -1028,15 +1021,17 @@ public class BlackJack extends Game{
                             "You got a total of 21! That's a Black Jack!");
                     winBlackJack.confirm.addActionListener(ee -> {
 
-                        cleanHands();
-                        confirmBet.setVisible(true);
-                        repaintRevalidate();
+                        if (!currentHand.handSplit) {
+                            cleanHands();
+                            confirmBet.setVisible(true);
+                            repaintRevalidate();
+                        }
 
                         winBlackJack.dispatchEvent(new WindowEvent(winBlackJack,
                                 WindowEvent.WINDOW_CLOSING));
                     });
 
-                    bet *= bettingPower;
+                    refreshMoneyLabel(true,false);
                     continue;
                 }
                 case BUST -> {
@@ -1044,9 +1039,11 @@ public class BlackJack extends Game{
                             "You went over 21, you lost");
                     loseBusted.confirm.addActionListener(ee -> {
 
-                        cleanHands();
-                        confirmBet.setVisible(true);
-                        repaintRevalidate();
+                        if (!currentHand.handSplit) {
+                            cleanHands();
+                            confirmBet.setVisible(true);
+                            repaintRevalidate();
+                        }
 
                         loseBusted.dispatchEvent(new WindowEvent(loseBusted, WindowEvent.WINDOW_CLOSING));
                     });
@@ -1071,9 +1068,7 @@ public class BlackJack extends Game{
                                 WindowEvent.WINDOW_CLOSING));
                     });
                 } else if (dealerHand.total == currentHand.total) {
-                    money += bet;
-                    moneyLabel.setText("$" + money);
-                    repaintRevalidate();
+                    refreshMoneyLabel(false,true);
 
                     Popup dealerWinLargerTotal = new Popup(false, true,
                             "The dealer got a total of " + dealerHand.total +
@@ -1084,17 +1079,13 @@ public class BlackJack extends Game{
                             cleanHands();
                             confirmBet.setVisible(true);
                             repaintRevalidate();
-                        }else {
-                            currentHand = userSplitHand;
                         }
 
                         dealerWinLargerTotal.dispatchEvent(new WindowEvent(dealerWinLargerTotal,
                                 WindowEvent.WINDOW_CLOSING));
                     });
                 } else {
-                    money += bet * bettingPower;
-                    moneyLabel.setText("$" + money);
-                    repaintRevalidate();
+                    refreshMoneyLabel(true,false);
 
                     Popup userWinLargerTotal = new Popup(true, false,
                             "The dealer got a total of " + dealerHand.total +
@@ -1105,8 +1096,6 @@ public class BlackJack extends Game{
                             cleanHands();
                             confirmBet.setVisible(true);
                             repaintRevalidate();
-                        }else {
-                            currentHand = userSplitHand;
                         }
 
                         userWinLargerTotal.dispatchEvent(new WindowEvent(userWinLargerTotal,
@@ -1117,5 +1106,18 @@ public class BlackJack extends Game{
         }
         currentHand = userHand;
         userHand.handSplit = false;
+    }
+
+    private void refreshMoneyLabel(boolean addingMoney, boolean isPush) {
+        if (addingMoney) {
+            money += bet * bettingPower;
+        } else if (isPush) {
+            money += bet;
+        }else {
+            money -= bet;
+        }
+
+        moneyLabel.setText("$" + money);
+        repaintRevalidate();
     }
 }
