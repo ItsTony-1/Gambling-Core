@@ -18,6 +18,10 @@ public class BlackJack extends Game{
 
     static Scanner console = new Scanner(System.in);
 
+    public static Hand userHand = new Hand(false, "Main Hand");
+    public static Hand userSplitHand = new Hand(false, "Secondary Hand");
+    public static Hand dealerHand = new Hand(false, "Dealer Hand");
+
     static JPanel dealerHandPanel = new JPanel();
     static JPanel userHand1 = new JPanel();
     static JPanel userHand2 = new JPanel();
@@ -31,10 +35,6 @@ public class BlackJack extends Game{
     static JLabel moneyLabel = new JLabel("$" + money);
     static JButton confirmBet = new JButton("Confirm Bet");
 
-    public static Hand userHand = new Hand(false, "Main Hand");
-    public static Hand userSplitHand = new Hand(false, "Secondary Hand");
-    public static Hand dealerHand = new Hand(false, "Dealer Hand");
-
     static JSplitPane userDealerSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
     static JSplitPane dealerBettingSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
     static JSplitPane userHandSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -44,7 +44,7 @@ public class BlackJack extends Game{
 
     public BlackJack(){
         dataWriter.setPrettyPrinting();
-        createNewDeck();
+        createNewDeck(6);
         createBlackjackScreen();
     }
 
@@ -346,6 +346,11 @@ public class BlackJack extends Game{
         return MatchEnd.IGNORE;
     }
 
+    /**
+     * Preforms what the above function does without affecting prints or money values
+     * @param hand to check
+     * @return {@link MatchEnd}
+     */
     private static MatchEnd bustOrBJ(Hand hand) {
 
         if (hand.total > 21){
@@ -1091,6 +1096,11 @@ public class BlackJack extends Game{
         userHand.handSplit = false;
     }
 
+    /**
+     * Changes the money label's value in coordination to the bet
+     * @param addingMoney if it is adding money
+     * @param isPush if both hands are the same
+     */
     private void refreshMoneyLabel(boolean addingMoney, boolean isPush) {
         if (addingMoney) {
             money += bet * bettingPower;
@@ -1104,6 +1114,11 @@ public class BlackJack extends Game{
         repaintRevalidate();
     }
 
+    /**
+     * Hides the UI in the options menu
+     * @param allUI if true hides all UI in the options menu
+     * @param firstHit if true and allUI is false; hides the double & split buttons (if applicable)
+     */
     private void hideUI(boolean allUI, boolean firstHit){
         if (allUI){
             hit.setVisible(false);

@@ -22,11 +22,11 @@ public class Game extends JPanel {
     /**
      * Creates a new deck using  the deckOfCardsAPI
      */
-    static void createNewDeck() {
+    static void createNewDeck(int howManyDecks) {
         URLConnection deckURl;
         try {
             deckURl = new URL("https://deckofcardsapi.com/api/"
-                    + "deck/new/shuffle/?deck_count=6").openConnection();
+                    + "deck/new/shuffle/?deck_count=" + howManyDecks).openConnection();
 
             Gson gson = dataWriter.create();
 
